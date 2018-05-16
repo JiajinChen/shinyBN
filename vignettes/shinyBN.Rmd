@@ -1,0 +1,43 @@
+---
+title: "shinyBN"
+author: "Jiajin Chen,Yongyue Wei"
+date: "2018年5月14日"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+shinyBN is a web application for construct, display and inference with Bayesian Network interactively.
+
+## Get Start:
+To install shinyBN from CRAN:
+```
+install.packages("shinyBN")
+```
+
+To install shinyBN from Github for the latest developmental version:
+```
+devtools::install_github('JiajinChen/shnyBN')
+```
+
+To launch the app:
+```
+shinyBN:run_shinyBN()
+```
+
+## Example
+### Main Page
+![](http://image.baidu.com/search/detail?ct=503316480&z=0&ipn=d&word=%E5%9B%BE%E7%89%87&hs=0&pn=9&spn=0&di=154169740560&pi=0&rn=1&tn=baiduimagedetail&is=0%2C0&ie=utf-8&oe=utf-8&cl=2&lm=-1&cs=415293130%2C2419074865&os=1556766946%2C250663840&simid=4145280632%2C499508967&adpicid=0&lpn=0&ln=30&fr=ala&fm=&sme=&cg=&bdtype=0&oriquery=&objurl=http%3A%2F%2Fimg.zcool.cn%2Fcommunity%2F0117e2571b8b246ac72538120dd8a4.jpg%401280w_1l_2o_100sh.jpg&fromurl=ippr_z2C%24qAzdH3FAzdH3Fooo_z%26e3Bzv55s_z%26e3Bv54_z%26e3BvgAzdH3Fo56hAzdH3FZMTYoNTMzMDQ%3D_z%26e3Bip4s&gsm=0&islist=&querylist=)
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

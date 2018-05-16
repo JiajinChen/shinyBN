@@ -1,0 +1,14 @@
+Package: shinyBN
+Type: Package
+Title: A web application for construct, display and inference with Bayesian Network interactively.
+Version: 0.1.0
+Author: Jiajin Chen,Yongyue Wei
+Maintainer: Jiajin Chen <chenjiajin626@163.com>
+Description: A Shiny web application for interactive construction,display and
+    inference of Bayesian Network.
+Depends: shiny,shinydashboard,dashboardthemes,DT,bnlearn,gRain,Rgraphviz,reshape2,
+    AnnotationDbi,svgPanZoom,svglite,SVGAnnotation,gridSVG,shinyjqui,igraph,sqldf
+License: Apache License 2.0
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.0.1
