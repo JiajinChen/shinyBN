@@ -31,7 +31,7 @@ ___
 
 ## How to use
 ___
-##### **Step 1: Input your row data/ R object!**
+#### **Step 1: Input your row data/ R object!**
 
 Here, we provide three type of data input:
 
@@ -41,7 +41,7 @@ For R platform users, besides that, you can also directly input an R object exis
 
   <img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Step%201.png?raw=true"/>
    
-##### **Step 2: Render your Network!**
+#### **Step 2: Render your Network!**
 
 Once your BN is inputed, the plot would present automatically with default parameters. If you are not satisfied with your graphic appearance or you want to highlight which nodes or edges. We provide tackles for you to render the plot in your style. We provide nodes color, nodes shape, nodes size, label size for nodes. As for edges, you can choose your favoriate line width, line color, line type. As for line width, we provide two different method: Self-defined and Arc strength, users can render line width corresponding to the strength of the probabilistic relationships. In addition, you're allowed to add legend to index the feature of plot. For instance, you might want to index the baseline nodes and the outcome nodes. High-quality images in PDF output interface also offered by shinyBN.
 
@@ -54,7 +54,7 @@ Once your BN is inputed, the plot would present automatically with default param
   + An Example:
   ![grab-landing-page](https://github.com/JiajinChen/shinyBN/blob/master/inst/GIF/Render1280.gif?v=9ad8eed7)
   
-##### **Step 3: Inference!**
+#### **Step 3: Inference!**
 
 Once your BN is inputed, you can query the probability of some nodes given the values of a set of instantiated nodes. shinyBN allowed users to set multiple instantiated nodes and both marginal probability and joint probability are supported. You can choose table or graph to display the result, user-defined color grade and legend are supported for graph. In addition, you can download the result through a PDF output interface for High-quality images.
   + An Example:
