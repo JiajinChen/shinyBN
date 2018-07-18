@@ -63,3 +63,7 @@ Once your BN is inputed, you can query the probability of some nodes given the v
 ## Source code
 
 shinyBN is an open source project, and the source code and its manual is freely available at https://github.com/JiajinChen/shinyBN.
+
+## Contact us
+
+If you have any problem or other inquiries you can also email us at ywei@njmu.edu.cn .
