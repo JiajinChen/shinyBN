@@ -11,7 +11,7 @@ install.packages("shinyBN")
 
 To install shinyBN from Github for the latest developmental version:
 ```{r,eval = FALSE}
-devtools::install_github('JiajinChen/shnyBN')
+devtools::install_github('JiajinChen/shinyBN')
 ```
 
 To launch the APP in R:
