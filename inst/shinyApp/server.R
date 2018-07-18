@@ -3,29 +3,34 @@ options(warn=-1)
 #SERVER
 shinyServer(function(input,output,session){
 
+  #Input the network in class bn.fit
   recFit <- reactive({
     bn_fit <- NULL
     if(input$inType=='R Object in R'){
-      if(!is.null(input$inFit)){
-        bn_fit <- get(input$inFit)
+      if(!is.null(input$inFit) & ! input$inFit == ""){
+        inF <- unlist(strsplit(input$inFit,",",fixed=T))[1]
+        if("bn.fit" %in% class(get(inF)))  bn_fit <- get(inF)
+        else bn_fit <- get(unlist(strsplit(input$inFit,",",fixed=T))[2])
         if(! "bn.fit" %in% class(bn_fit)) bn_fit <- NULL
       }
     }
-    else if(input$inType=='R object(.Rdata)') {
+    else if(input$inType=='R Object(.Rdata)') {
       obj <- input$inObject
       if(! is.null(obj)){
         a <- load(obj$datapath)
         load(obj$datapath)
-        bn_fit <- get(a)
+        if("bn.fit" %in% class(get(a[1])))  bn_fit <- get(a[1])
+        else bn_fit <- get(a[2])
+        if(! "bn.fit" %in% class(bn_fit)) bn_fit <- NULL
       }
     }
-    else if(input$inType=='Row Data(.csv)'){
+    else if(input$inType=='Raw Data(.csv)'){
       file <- input$inFile
       if(! is.null(file)){
         data <- read.csv(file$datapath, header = input$inHeader,colClasses = "factor")
         if(! is.null(data)){
           if(input$inLearnType == 'Constraint-Based Algorithms'){
-            if(input$inLearn1 == 'Grow-Shrink') dag <- cextend(gs(data),strict = FALSE)
+            if(input$inLearn1 == 'Grow-Shrink') dag <- gs(data)
             else if(input$inLearn1 == 'Incremental Association') dag <- iamb(data)
             else if(input$inLearn1 == 'Fast Incremental Association') dag <- fast.iamb(data)
             else if(input$inLearn1 == 'Interleaved Incremental Association') dag <- inter.iamb(data)
@@ -33,16 +38,12 @@ shinyServer(function(input,output,session){
             else if(input$inLearn1 == 'Semi-Interleaved HITON-PC') dag <- si.hiton.pc(data)
           }
           else if(input$inLearnType == 'Score-Based Algorithms'){
-            if(input$inLearn1 == 'hill-climbing') dag <- hc(data)
-            else if(input$inLearn1 == 'tabu search') dag <- tabu(data)
+            if(input$inLearn2 == 'hill-climbing') dag <- hc(data)
+            else if(input$inLearn2 == 'tabu search') dag <- tabu(data)
           }
           else if(input$inLearnType == 'Hybrid Algorithms'){
-            if(input$inLearn1 == 'Max-Min Hill Climbing') dag <- mmhc(data)
-            else if(input$inLearn1 == '2-phase Restricted Maximization') dag <- rsmax2(data)
-          }
-          else if(input$inLearnType == 'Local Discovery Algorithms'){
-            if(input$inLearn1 == 'ARACNE') dag <- aracne(data)
-            else if(input$inLearn1 == 'Chow-Liu') dag <- chow.liu(data)
+            if(input$inLearn3 == 'Max-Min Hill Climbing') dag <- mmhc(data)
+            else if(input$inLearn3 == '2-phase Restricted Maximization') dag <- rsmax2(data)
           }
           bn_fit <- bn.fit(dag,data,method = input$inMethod)
           if(! "bn.fit" %in% class(bn_fit)) bn_fit <- NULL
@@ -52,11 +53,52 @@ shinyServer(function(input,output,session){
     bn_fit
   })
 
+  #Read the data to compute edges strength
+  recStrength <- reactive({
+    bn_Strength <- NULL
+    if(input$inType=='R Object in R'){
+      if(!is.null(input$inFit)){
+        inS <- unlist(strsplit(input$inFit,",",fixed=T))[1]
+        if("bn.fit" %in% class(get(inS)))  bn_data <- get(unlist(strsplit(input$inFit,",",fixed=T))[2])
+        else bn_data <- get(inS)
+      }
+    }
+    else if(input$inType=='R object(.Rdata)') {
+      obj <- input$inObject
+      if(! is.null(obj)){
+        a <- load(obj$datapath)
+        load(obj$datapath)
+        if("bn.fit" %in% class(get(a[1])))  bn_data <- get(a[2])
+        else bn_data <- get(a[1])
+      }
+    }
+    else if(input$inType=='Raw Data(.csv)'){
+      file <- input$inFile
+      if(! is.null(file)){
+        bn_data <- read.csv(file$datapath, header = input$inHeader,colClasses = "factor")
+      }
+    }
+    if(is.data.frame(bn_data)){
+      fit <- recFit()
+      if(! is.null(fit)) x <- as.bn(graphviz.plot(fit))
+      if(input$IE_Criterion == 'Independence Test'){
+        bn_Strength <- arc.strength(x,bn_data,criterion=input$IE_Independence)
+        if(! "bn.strength" %in% class(bn_Strength)) bn_Strength <- NULL
+        else bn_Strength$strength <- bn_Strength$strength*-1
+      }else{
+        bn_Strength <- arc.strength(x,bn_data,criterion=input$IE_Score)
+        if(! "bn.strength" %in% class(bn_Strength)) bn_Strength <- NULL
+      }
+    }
+    bn_Strength
+  })
+
+  #Reactive UI output
   output$evidence <- renderUI({
     fit <- recFit()
     if(! is.null(fit)){
       Nodelist = nodes(fit)
-      selectInput("inEvidence","Select the Evidence:",Nodelist)
+      selectInput("inEvidence","Select the Evidence nodes:",Nodelist)
     }
   })
 
@@ -64,7 +106,7 @@ shinyServer(function(input,output,session){
     fit <- recFit()
     if(! is.null(input$inEvidence) & ! is.null(fit)){
       valuelist = rownames(fit[[input$inEvidence]][["prob"]])
-      radioButtons("inValue","Value of Evidence:",valuelist)
+      radioButtons("inValue","Value of Evidence nodes:",valuelist)
     }
   })
 
@@ -72,7 +114,7 @@ shinyServer(function(input,output,session){
     fit <- recFit()
     if(! is.null(fit)){
       Nodelist = nodes(fit)
-      selectInput("inQuery","Select the Query:",Nodelist)
+      selectInput("inQuery","Select the Query nodes:",Nodelist)
     }
   })
 
@@ -91,6 +133,12 @@ shinyServer(function(input,output,session){
       edges = paste(e$from,"~",e$to,sep = '')
       selectInput("inEdges","Select the Edges:",edges)
     }
+  })
+
+  output$E_Render <- renderUI({
+    if(input$IE_size_type == 'Arc Strength') Renderlist <- c("Edge Color","Edge Type")
+    else Renderlist <- c("Edge Color","Edge Type","Edge Width")
+    selectInput("Edges_type","Select the Type:",Renderlist)
   })
 
   # Add Nodes and Edges Render!
@@ -159,6 +207,7 @@ shinyServer(function(input,output,session){
   })
   output$Ecolorsize_table <- renderDataTable(recEdge(),class="compact",options=list(searching=F,pageLength=5,
                                                                                     columnDefs=list(list(className = 'dt-center', targets = 1:2))))
+
   recRendN <- reactive({
     fit <- recFit()
     nodes <- nodes(fit)
@@ -253,7 +302,7 @@ shinyServer(function(input,output,session){
   })
 
 
-  #SVG Output
+  #Network Visualization
   output$outSVG <- renderSvgPanZoom({
     fit <- recFit()
     if(! is.null(fit)){
@@ -302,8 +351,14 @@ shinyServer(function(input,output,session){
       if(length(Elabel)==length(uni_l)) Elabel <- Elabel[order(uni_l)]
       else Elabel[1] <- "Mismatched Nodes Label number"
 
+      if(input$IE_size_type == "Self-defined") E_size_strength <- recRendE()[["Elwd"]]
+      else{
+        a <- recStrength()$strength
+        E_size_strength <- 2*(a-min(a))/(max(a)-min(a))+1
+      }
+
       Gsvg <- ggplot(node_xy,aes(x=x_position,y=y_position))+
-        geom_segment(data=node_edge_xy,aes(x = x,y = y,xend = arrow_tx,yend = arrow_ty,lty=ltotal,color=lcolor,size=recRendE()[["Elwd"]]),arrow=arrow(length=unit(3,"mm"),type="closed"))+
+        geom_segment(data=node_edge_xy,aes(x = x,y = y,xend = arrow_tx,yend = arrow_ty,lty=ltotal,color=lcolor,size=E_size_strength),arrow=arrow(length=unit(3,"mm"),type="closed"))+
         geom_point(aes(shape=ntotal,color=ncolor,size=recRendN()[["Nsize"]]))+
         geom_text(aes(label=nodes),size=recRendN()[["Tsize"]])+
         theme(panel.background = element_rect(fill = "transparent",colour = NA),
@@ -378,7 +433,7 @@ shinyServer(function(input,output,session){
                            legend.margin=margin(1,1,1,1))
     }else{
       Gsvg<-ggplot(data.frame(x=400,y=400),aes(x,y))+
-        geom_text(aes(label="Please input your R Object or Row Data!"),color="red",size=4.5)+
+        geom_text(aes(label="Please import your R object with network, or raw data to build network!"),color="red",size=4.5)+
         theme(panel.background = element_rect(fill = "transparent",colour = NA),
               panel.grid.minor = element_blank(),
               panel.grid.major = element_blank(),
@@ -394,15 +449,15 @@ shinyServer(function(input,output,session){
     )
   })
 
-
+  #Network Download
   output$shinyBN.pdf <- downloadHandler(
     filename = paste("shinyBN.pdf"),
     content = function(file){
-      ggsave(file,GSVG,width=input$Pwidth,height=input$Pheight)
+      ggsave(file,GSVG,width=as.numeric(input$Pwidth),height=as.numeric(input$Pheight))
     }, contentType = 'application/pdf'
   )
 
-  # Evidence & Query!
+  # Set evidence & Query!
   RecE <- reactive({
     if(input$AddButtonE == n_AE + 1) {
       n_AE <<- n_AE + 1
@@ -419,7 +474,7 @@ shinyServer(function(input,output,session){
     Evid_tab
   })
   output$Evi_table <- renderDataTable(RecE(),class="compact",rownames = FALSE,options=list(searching=F,
-                                                                                           columnDefs=list(list(className = 'dt-center', targets = 1:2))))
+                                                                                           columnDefs=list(list(className = 'dt-center', targets = 1))))
 
   RecQ <- reactive({
     fit <- recFit()
@@ -457,15 +512,16 @@ shinyServer(function(input,output,session){
         level <- names(Proability)
         n_level <- sapply(q,length)
         Variable <- rep(names(q),n_level)
-        result <<- rbind(result,data.frame(Variable,level,Proability))
+        result <<- rbind(result,data.frame(Variable,level,Proability,stringsAsFactors = F))
       }
       if(input$Type == "joint"){
-        result <<- rbind(result,melt(q,varNames=dimnames(q),value.name = "Proability"))
+        result <<- rbind(result,melt(q,varNames=dimnames(q),value.name = "Proability",as.is=T))
       }
     }
     result
   })
 
+  # Query results in graph
   output$ResultPlot <- renderPlot({
     if(nrow(RecR())){
       data <- RecR()
@@ -481,7 +537,7 @@ shinyServer(function(input,output,session){
       else Label <- Label[1:n]
 
       if(input$Type == "marginal"){
-        x <- paste(data$Variable,data$level,sep="")
+        x <- paste(data$Variable,":",data$level,sep="")
         data_plot <- data.frame(x=x,p=data$Proability)
         g <<- ggplot(data=data_plot,aes(x))+
           geom_bar(aes(weight=p),fill="lightblue")+
@@ -493,6 +549,7 @@ shinyServer(function(input,output,session){
                 panel.grid.major = element_blank(),
                 plot.background = element_rect(fill = "transparent",colour = NA),
                 axis.line = element_line(colour = "black"),
+                axis.text.x = element_text(size=10),
                 axis.title.y = element_text(angle=90,size = 14))
         if(input$GC_TF){
           index <- sapply(data$Proability,function(a){sum(a > Interval)})
@@ -512,7 +569,7 @@ shinyServer(function(input,output,session){
         nc <- ncol(data) - 1
         nr <- nrow(data)
         data$IndexXxXxX <- letters[1:nr]
-        data2 <- data.frame(lx=rep(data$IndexXxXxX,nc),ly=rep(1:nc*-4,each=nr),lab=unlist(data[,1:nc]),stringsAsFactors = F)
+        data2 <- data.frame(lx=rep(data$IndexXxXxX,nc),ly=rep(1:nc*-4,each=nr),lab=unlist2(data[,1:nc]),stringsAsFactors = F)
         g <<-ggplot(data,aes(x=IndexXxXxX))+
           geom_bar(aes(weight=Proability),fill="lightblue")+
           geom_text(aes(x=IndexXxXxX,y=Proability+4,label=Proability))+
@@ -558,14 +615,16 @@ shinyServer(function(input,output,session){
     }
   })
 
-  output$Result.pdf <- downloadHandler(
-    filename = paste("Result.pdf"),
-    content = function(file){
-      ggsave(file,g,width=input$Pwidth,height=input$Pheight)
-    }, contentType = 'application/pdf'
-  )
-
+  # Query results in table
   output$Result <- renderDT({
     if(nrow(RecR())) datatable(RecR(),rownames = FALSE,class="compact",options=list(searching=F,columnDefs=list(list(className = 'dt-center', targets = 1)))) %>% formatPercentage('Proability',2)
   })
+
+  #Download Query results in graph
+  output$Result.pdf <- downloadHandler(
+    filename = paste("Result.pdf"),
+    content = function(file){
+      ggsave(file,g,width=as.numeric(input$Pwidth),height=as.numeric(input$Pheight))
+    }, contentType = 'application/pdf'
+  )
 })
