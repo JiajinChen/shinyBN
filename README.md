@@ -1,14 +1,3 @@
----
-title: "shinyBN"
-author: "Jiajin Chen,Yongyue Wei"
-date: "2018/05/14"
-output: html_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 ## Introduction
 ___
 shinyBN is a Shiny application for interactive construction, inference and visualization of Bayesian Network, which provide friendly GUI for users lacking of programming skills. It's based on bnlearn (A core R package for construction and inference of Bayesian Network) and Rgraphviz (An R package commonly used for Bayesian network visualization), and wrapped by Shiny, a framework to build interactive web apps straight from R. 
@@ -66,4 +55,11 @@ Once your BN is inputed, the plot would present automatically with default param
   ![grab-landing-page](https://github.com/JiajinChen/shinyBN/blob/master/inst/GIF/Render1280.gif?v=9ad8eed7)
   
 ##### **Step 3: Inference!**
- 
+
+Once your BN is inputed, you can query the probability of some nodes given the values of a set of instantiated nodes. shinyBN allowed users to set multiple instantiated nodes and both marginal probability and joint probability are supported. You can choose table or graph to display the result, user-defined color grade and legend are supported for graph. In addition, you can download the result through a PDF output interface for High-quality images.
+  + An Example:
+  ![grab-landing-page](https://github.com/JiajinChen/shinyBN/blob/master/inst/GIF/Inference1280.gif?v=9ad8eed7)
+
+## Source code
+
+shinyBN is an open source project, and the source code and its manual is freely available at https://github.com/JiajinChen/shinyBN.
