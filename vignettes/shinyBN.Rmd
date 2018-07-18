@@ -1,7 +1,7 @@
 ---
 title: "shinyBN"
 author: "Jiajin Chen,Yongyue Wei"
-date: "2018年5月14日"
+date: "2018/05/14"
 output: html_document
 ---
 
@@ -10,34 +10,72 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Introduction
-shinyBN is a web application for construct, display and inference with Bayesian Network interactively.
+___
+shinyBN is a Shiny application for interactive construction, inference and visualization of Bayesian Network, which provide friendly GUI for users lacking of programming skills. It's based on bnlearn (A core R package for construction and inference of Bayesian Network) and Rgraphviz (An R package commonly used for Bayesian network visualization), and wrapped by Shiny, a framework to build interactive web apps straight from R. 
 
-## Get Start:
+## Get Start
+___
 To install shinyBN from CRAN:
-```
+```{r,eval = FALSE}
 install.packages("shinyBN")
 ```
 
 To install shinyBN from Github for the latest developmental version:
-```
+```{r,eval = FALSE}
 devtools::install_github('JiajinChen/shnyBN')
 ```
 
-To launch the app:
-```
+To launch the APP in R:
+```{r,eval = FALSE}
 shinyBN:run_shinyBN()
 ```
 
-## Example
-### Main Page
-![](http://image.baidu.com/search/detail?ct=503316480&z=0&ipn=d&word=%E5%9B%BE%E7%89%87&hs=0&pn=9&spn=0&di=154169740560&pi=0&rn=1&tn=baiduimagedetail&is=0%2C0&ie=utf-8&oe=utf-8&cl=2&lm=-1&cs=415293130%2C2419074865&os=1556766946%2C250663840&simid=4145280632%2C499508967&adpicid=0&lpn=0&ln=30&fr=ala&fm=&sme=&cg=&bdtype=0&oriquery=&objurl=http%3A%2F%2Fimg.zcool.cn%2Fcommunity%2F0117e2571b8b246ac72538120dd8a4.jpg%401280w_1l_2o_100sh.jpg&fromurl=ippr_z2C%24qAzdH3FAzdH3Fooo_z%26e3Bzv55s_z%26e3Bv54_z%26e3BvgAzdH3Fo56hAzdH3FZMTYoNTMzMDQ%3D_z%26e3Bip4s&gsm=0&islist=&querylist=)
+To lauch the APP through browser:
 
-## Including Plots
+Please visit: [https://jiajin.shinyapps.io/shinyBN/](https://jiajin.shinyapps.io/shinyBN/)
 
-You can also embed plots, for example:
+## Main Page
+___
 
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
+<img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Main%20Page.png?raw=true"/>
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+## How to use
+___
+#### **Step 1: Input your row data/ R object!**
+
+Here, we provide three type of data input:
+
+For web platform users, you can choose a csv-format **discretized** row data or an R object save as Rdata. 
+
+For R platform users, besides that, you can also directly input an R object existing in your R environment.
+
+  <img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Step%201.png?raw=true"/>
+   
+#### **Step 2: Render your Network! & Download the Network**
+
+Once your BN is inputed, the plot would present automatically with default parameters. If you are not satisfied with your graphic appearance or you want to highlight which nodes or edges. We provide tackles for you to render the plot in your style. We provide nodes color, nodes shape, nodes size, label size for nodes. As for edges, you can choose your favoriate line width, line color, line type. As for line width, we provide two different method: Self-defined and Arc strength, users can render line width corresponding to the strength of the probabilistic relationships. In addition, you're allowed to add legend to index the feature of plot. For instance, you might want to index the baseline nodes and the outcome nodes. High-quality images in PDF output interface also offered by shinyBN.
+
+  + Nodes:
+  <img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Node%20Render.png?raw=true"/>
+  
+  + Edges:
+  <img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Edge%20Render.png?raw=true"/>
+  
+  + An Example:
+  ![grab-landing-page](https://github.com/JiajinChen/shinyBN/blob/master/inst/GIF/Render1280.gif?v=9ad8eed7)
+  
+#### **Step 3: Inference!**
+
+Once your BN is inputed, you can query the probability of some nodes given the values of a set of instantiated nodes. shinyBN allowed users to set multiple instantiated nodes and both marginal probability and joint probability are supported. You can choose table or graph to display the result, user-defined color grade and legend are supported for graph. In addition, you can download the result through a PDF output interface for High-quality images.
+  + An Example:
+  ![grab-landing-page](https://github.com/JiajinChen/shinyBN/blob/master/inst/GIF/Inference1280.gif?v=9ad8eed7)
+
+## Source code
+
+shinyBN is an open source project, and the source code and its manual is freely available at https://github.com/JiajinChen/shinyBN.
+
+## Contact us
+
+If you have any problem or other inquiries you can also email us at ywei@njmu.edu.cn .
+
