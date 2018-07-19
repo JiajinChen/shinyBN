@@ -4,19 +4,14 @@ shinyBN is a Shiny application for interactive construction, inference and visua
 
 ## Get Start
 ___
-To install shinyBN from CRAN:
-```{r,eval = FALSE}
-install.packages("shinyBN")
-```
-
-To install shinyBN from Github for the latest developmental version:
+To install shinyBN from Github:
 ```{r,eval = FALSE}
 devtools::install_github('JiajinChen/shinyBN')
 ```
 
 To launch the APP in R:
 ```{r,eval = FALSE}
-shinyBN:run_shinyBN()
+shinyBN::run_shinyBN()
 ```
 
 To lauch the APP through browser:
