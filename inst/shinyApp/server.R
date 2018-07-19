@@ -1,5 +1,4 @@
 options(warn=-1)
-
 # change the maximum size restriction
 options(shiny.maxRequestSize=30*1024^2)
 

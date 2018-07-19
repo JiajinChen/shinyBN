@@ -60,20 +60,10 @@ if(! require(svgPanZoom)){
   install.packages("svgPanZoom")
   require(svgPanZoom)
 }
-if(! require(svglite)){
-  print("Trying to install package svglite")
-  install.packages("svglite")
-  require(svglite)
-}
 if(! require(SVGAnnotation)){
   print("Trying to install package SVGAnnotation")
   devtools::install_github("duncantl/SVGAnnotation")
   require(SVGAnnotation)
-}
-if(! require(gridSVG)){
-  print("Trying to install package gridSVG")
-  install.packages("gridSVG")
-  require(gridSVG)
 }
 if(! require(shinyjqui)){
   print("Trying to install package shinyjqui")
