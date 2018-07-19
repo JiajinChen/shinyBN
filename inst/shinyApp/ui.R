@@ -186,7 +186,7 @@ shinyUI(dashboardPage(
                ),
                conditionalPanel(
                  condition = "input.IE_size_type == 'Arc Strength'",
-                 column(width=3,radioButtons("IE_Criterion","Criterion：",c("Independence Test","Score Function"))),
+                 column(width=3,radioButtons("IE_Criterion","Criterion?",c("Independence Test","Score Function"))),
                  conditionalPanel(
                    condition = "input.IE_Criterion == 'Independence Test'",
                    column(width=6,selectInput("IE_Independence","Tests:",list(`Mutual information` = c("Asymptotic chi-square test"="mi", "Adjusted degrees of freedom"="mi-adf",  "Monte Carlo permutation test"="mc-mi",
