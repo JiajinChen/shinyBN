@@ -1,5 +1,8 @@
 options(warn=-1)
 
+# change the maximum size restriction
+options(shiny.maxRequestSize=30*1024^2)
+
 #SERVER
 shinyServer(function(input,output,session){
 
@@ -104,9 +107,10 @@ shinyServer(function(input,output,session){
 
   output$value <- renderUI({
     fit <- recFit()
-    if(! is.null(input$inEvidence) & ! is.null(fit)){
-      valuelist = rownames(fit[[input$inEvidence]][["prob"]])
-      radioButtons("inValue","Value of Evidence nodes:",valuelist)
+    if(! is.null(fit) & ! is.null(input$inEvidence)){
+      tmp = fit[[input$inEvidence]]
+      valuelist = rownames(tmp$prob)
+      if(length(valuelist)) radioButtons("inValue","Value of Evidence nodes:",choices=valuelist)
     }
   })
 
@@ -121,8 +125,8 @@ shinyServer(function(input,output,session){
   output$N <- renderUI({
     fit <- recFit()
     if(! is.null(fit)){
-      nodes = nodes(fit)
-      selectInput("inNodes","Select the Nodes:",nodes)
+      Nodelist = nodes(fit)
+      selectInput("inNodes","Select the Nodes:",Nodelist)
     }
   })
 
@@ -130,8 +134,8 @@ shinyServer(function(input,output,session){
     fit <- recFit()
     if(! is.null(fit)){
       e = as.data.frame(arcs(fit))
-      edges = paste(e$from,"~",e$to,sep = '')
-      selectInput("inEdges","Select the Edges:",edges)
+      edgeslist = paste(e$from,"~",e$to,sep = '')
+      selectInput("inEdges","Select the Edges:",edgeslist)
     }
   })
 
@@ -358,7 +362,7 @@ shinyServer(function(input,output,session){
       }
 
       Gsvg <- ggplot(node_xy,aes(x=x_position,y=y_position))+
-        geom_segment(data=node_edge_xy,aes(x = x,y = y,xend = arrow_tx,yend = arrow_ty,lty=ltotal,color=lcolor,size=E_size_strength),arrow=arrow(length=unit(3,"mm"),type="closed"))+
+        geom_segment(data=node_edge_xy,aes(x = x,y = y,xend = arrow_tx,yend = arrow_ty,lty=ltotal,color=lcolor,size=E_size_strength),arrow=arrow(length=unit(E_size_strength+1.5,"mm"),type="closed"))+
         geom_point(aes(shape=ntotal,color=ncolor,size=recRendN()[["Nsize"]]))+
         geom_text(aes(label=nodes),size=recRendN()[["Tsize"]])+
         theme(panel.background = element_rect(fill = "transparent",colour = NA),

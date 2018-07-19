@@ -4,7 +4,9 @@ options(warn=-1)
 shinyUI(dashboardPage(
 
   # Header
-  dashboardHeader(title="Bayesian Network:"),
+  dashboardHeader(title="Bayesian Network:",
+                  dropdownMenu(type="notifications",badgeStatus = "primary",icon=icon("question-sign",lib="glyphicon"),
+                               notificationItem(icon=icon("question"),"Click to get help",href = "https://github.com/JiajinChen/shinyBN"))),
 
   # Sidebar
   dashboardSidebar(
@@ -180,7 +182,7 @@ shinyUI(dashboardPage(
                conditionalPanel(
                  condition = "input.IE_size_type == 'Self-defined'",
                  column(width=3,""),
-                 column(width=6,sliderInput("IE_size","Edges Width:",min=1,max=5,step=0.5,value=1))
+                 column(width=6,sliderInput("IE_size","Edges Width:",min=0,max=5,step=0.5,value=1))
                ),
                conditionalPanel(
                  condition = "input.IE_size_type == 'Arc Strength'",
@@ -218,7 +220,7 @@ shinyUI(dashboardPage(
                ),
                conditionalPanel(
                  condition = "input.Edges_type == 'Edge Width'",
-                 column(width=6,sliderInput("E_size","Edge Width:",min=1,max=10,value=2))
+                 column(width=6,sliderInput("E_size","Edge Width:",min=0,max=5,step=0.5,value=1))
                ),
                br(),
                column(width=12,

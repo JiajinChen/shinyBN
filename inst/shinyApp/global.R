@@ -91,6 +91,11 @@ if(! require(sqldf)){
   require(sqldf)
 }
 
+data(asia,package = "bnlearn")
+names(asia) <- c("Asia","smoke","tub","lung","bronc","either","xray","dysp")
+Asia_data <- asia
+dag = model2network("[Asia][smoke][tub|Asia][lung|smoke][bronc|smoke][dysp|bronc:either][either|tub:lung][xray|either]")
+Asia_fit <- bn.fit(dag,Asia_data)
 
 Evid_tab<-data.frame(Evidence=character(),Value=character(),stringsAsFactors=FALSE)
 Query_tab<-data.frame(Query=character(),stringsAsFactors=FALSE)
