@@ -36,7 +36,20 @@ shinyUI(dashboardPage(
         selectInput("inLearn3","Structure Algorithm:",c("Max-Min Hill Climbing","2-phase Restricted Maximization"))
       ),
       selectInput("inMethod","Parameter Algorithm:",c("Maximum Likelihood parameter estimation"="mle",
-                                                 "Bayesian parameter estimation"="bayes"))
+                                                 "Bayesian parameter estimation"="bayes")),
+      column(width=6,checkboxInput("prior_TF", "Prior?", F)),
+      column(width=6,checkboxInput("prior_hide", "Hide?", F)),
+      conditionalPanel(
+        condition = "input.prior_TF",
+        uiOutput("from"),
+        uiOutput("to"),
+        conditionalPanel(
+          condition = "output.from",
+          radioButtons("BorW",NULL,c("blacklist","whitelist"),inline = T),
+          column(width=6,actionButton("AddButtonP", "Add!",icon=icon("plus"),lib="glyphicon")),
+          column(width=6,actionButton("delButtonP", "Delete!",icon=icon("trash"),lib="glyphicon"))
+        )
+      )
     ),
     conditionalPanel(
       condition = "input.inType == 'R Object(.Rdata)'",
@@ -44,12 +57,18 @@ shinyUI(dashboardPage(
     ),
     uiOutput("evidence"),
     uiOutput("value"),
-    column(width=6,actionButton("AddButtonE", "Add!",icon=icon("plus"),lib="glyphicon")),
-    column(width=6,actionButton("delButtonE", "Delete!",icon=icon("trash"),lib="glyphicon")),
+    conditionalPanel(
+      condition = "output.evidence",
+      column(width=6,actionButton("AddButtonE", "Add!",icon=icon("plus"),lib="glyphicon")),
+      column(width=6,actionButton("delButtonE", "Delete!",icon=icon("trash"),lib="glyphicon"))
+    ),
     uiOutput("query"),
-    column(width=6,actionButton("AddButtonQ", "Add!",icon=icon("plus"),lib="glyphicon")),
-    column(width=6,actionButton("delButtonQ", "Delete!",icon=icon("trash"),lib="glyphicon")),
-    radioButtons("Type","Choose the type:",c("Marginal" = "marginal","Joint" = "joint"),inline=T)
+    conditionalPanel(
+      condition = "output.query",
+      column(width=6,actionButton("AddButtonQ", "Add!",icon=icon("plus"),lib="glyphicon")),
+      column(width=6,actionButton("delButtonQ", "Delete!",icon=icon("trash"),lib="glyphicon")),
+      radioButtons("Type","Choose the type:",c("Marginal" = "marginal","Joint" = "joint"),inline=T)
+    )
   ),
 
   # Body
@@ -97,6 +116,10 @@ shinyUI(dashboardPage(
                                         )
                                )
                         ))),
+               conditionalPanel(
+                 condition = "input.prior_TF &  ! input.prior_hide",
+                 column(width=6,dataTableOutput("Pri_table"))
+               ),
                fixedPanel(top = 65, right=80, width=430,height=15,draggable = F,
                           column(width=3,selectInput("inLayout",NULL,c("dot","neato","twopi","circo","fdp"))),
                           column(width=1,h5("W:",align="center")),

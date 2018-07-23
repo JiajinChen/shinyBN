@@ -5,6 +5,39 @@ options(shiny.maxRequestSize=30*1024^2)
 #SERVER
 shinyServer(function(input,output,session){
 
+  #Structure Prior
+  RecP <- reactive({
+    if(input$AddButtonP == n_AP + 1) {
+      n_AP <<- n_AP + 1
+      if(input$in_From != input$in_To) Pri_tab <<- rbind(Pri_tab,data.frame(From=input$in_From,To=input$in_To,Type=input$BorW,stringsAsFactors=FALSE))
+    }
+    if(input$delButtonP == n_DP + 1) {
+      n_DP <<- n_DP + 1
+      indexP = which(Pri_tab$From == input$in_From & Pri_tab$To == input$in_To & Pri_tab$Type == input$BorW)
+      if(length(indexP)) Pri_tab <<- Pri_tab[-indexP,]
+    }
+    Pri_tab <<- Pri_tab[!duplicated(data.frame(Pri_tab$From,Pri_tab$To,Pri_tab$Type), fromLast=TRUE), ]
+    rownames(Pri_tab) <- NULL
+    Pri_tab
+  })
+  output$Pri_table <- renderDataTable(RecP(),class="compact",rownames = FALSE,options=list(searching=F,
+                                                                                           columnDefs=list(list(className = 'dt-center', targets = 1))))
+
+  recPrior <- reactive({
+
+    Prior <- RecP()
+    colnames(Prior) <- c("from","to","type")
+
+    white <- Prior[Prior$type == "whitelist",]
+    white <- white[,-3]
+    if(nrow(white) == 0) white <- NULL
+    black <- Prior[Prior$type == "blacklist",]
+    black <- black[,-3]
+    if(nrow(black) == 0) black <- NULL
+    renderP <- list(black=black,white=white)
+    renderP
+  })
+
   #Input the network in class bn.fit
   recFit <- reactive({
     bn_fit <- NULL
@@ -32,20 +65,20 @@ shinyServer(function(input,output,session){
         data <- read.csv(file$datapath, header = input$inHeader,colClasses = "factor")
         if(! is.null(data)){
           if(input$inLearnType == 'Constraint-Based Algorithms'){
-            if(input$inLearn1 == 'Grow-Shrink') dag <- gs(data)
-            else if(input$inLearn1 == 'Incremental Association') dag <- iamb(data)
-            else if(input$inLearn1 == 'Fast Incremental Association') dag <- fast.iamb(data)
-            else if(input$inLearn1 == 'Interleaved Incremental Association') dag <- inter.iamb(data)
-            else if(input$inLearn1 == 'Max-Min Parents and Children') dag <- mmpc(data)
-            else if(input$inLearn1 == 'Semi-Interleaved HITON-PC') dag <- si.hiton.pc(data)
+            if(input$inLearn1 == 'Grow-Shrink') dag <- gs(data,blacklist = recPrior()[["black"]],whitelist = recPrior()[["white"]])
+            else if(input$inLearn1 == 'Incremental Association') dag <- iamb(data,blacklist = recPrior()[["black"]],whitelist = recPrior()[["white"]])
+            else if(input$inLearn1 == 'Fast Incremental Association') dag <- fast.iamb(data,blacklist = recPrior()[["black"]],whitelist = recPrior()[["white"]])
+            else if(input$inLearn1 == 'Interleaved Incremental Association') dag <- inter.iamb(data,blacklist = recPrior()[["black"]],whitelist = recPrior()[["white"]])
+            else if(input$inLearn1 == 'Max-Min Parents and Children') dag <- mmpc(data,blacklist = recPrior()[["black"]],whitelist = recPrior()[["white"]])
+            else if(input$inLearn1 == 'Semi-Interleaved HITON-PC') dag <- si.hiton.pc(data,blacklist = recPrior()[["black"]],whitelist = recPrior()[["white"]])
           }
           else if(input$inLearnType == 'Score-Based Algorithms'){
-            if(input$inLearn2 == 'hill-climbing') dag <- hc(data)
-            else if(input$inLearn2 == 'tabu search') dag <- tabu(data)
+            if(input$inLearn2 == 'hill-climbing') dag <- hc(data,blacklist = recPrior()[["black"]],whitelist = recPrior()[["white"]])
+            else if(input$inLearn2 == 'tabu search') dag <- tabu(data,blacklist = recPrior()[["black"]],whitelist = recPrior()[["white"]])
           }
           else if(input$inLearnType == 'Hybrid Algorithms'){
-            if(input$inLearn3 == 'Max-Min Hill Climbing') dag <- mmhc(data)
-            else if(input$inLearn3 == '2-phase Restricted Maximization') dag <- rsmax2(data)
+            if(input$inLearn3 == 'Max-Min Hill Climbing') dag <- mmhc(data,blacklist = recPrior()[["black"]],whitelist = recPrior()[["white"]])
+            else if(input$inLearn3 == '2-phase Restricted Maximization') dag <- rsmax2(data,blacklist = recPrior()[["black"]],whitelist = recPrior()[["white"]])
           }
           bn_fit <- bn.fit(dag,data,method = input$inMethod)
           if(! "bn.fit" %in% class(bn_fit)) bn_fit <- NULL
@@ -118,6 +151,22 @@ shinyServer(function(input,output,session){
     if(! is.null(fit)){
       Nodelist = nodes(fit)
       selectInput("inQuery","Select the Query nodes:",Nodelist)
+    }
+  })
+
+  output$from <- renderUI({
+    fit <- recFit()
+    if(! is.null(fit)){
+      Nodelist = nodes(fit)
+      selectInput("in_From","From:",Nodelist)
+    }
+  })
+
+  output$to <- renderUI({
+    fit <- recFit()
+    if(! is.null(fit)){
+      Nodelist = nodes(fit)
+      selectInput("in_To","To:",Nodelist)
     }
   })
 

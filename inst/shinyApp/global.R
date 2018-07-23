@@ -88,6 +88,7 @@ dag = model2network("[Asia][smoke][tub|Asia][lung|smoke][bronc|smoke][dysp|bronc
 Asia_fit <- bn.fit(dag,Asia_data)
 
 Evid_tab<-data.frame(Evidence=character(),Value=character(),stringsAsFactors=FALSE)
+Pri_tab<-data.frame(From=character(),To=character(),Type=character(),stringsAsFactors=FALSE)
 Query_tab<-data.frame(Query=character(),stringsAsFactors=FALSE)
 Ncolorsize_tab <- data.frame()
 Ecolorsize_tab <- data.frame()
@@ -99,6 +100,8 @@ n_AE <- 0
 n_DE <- 0
 n_AQ <- 0
 n_DQ <- 0
+n_AP <- 0
+n_DP <- 0
 n_ANode  <- 0
 n_DNode  <- 0
 n_AEdge  <- 0
