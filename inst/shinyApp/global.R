@@ -89,7 +89,7 @@ Asia_fit <- bn.fit(dag,Asia_data)
 
 Evid_tab<-data.frame(Evidence=character(),Value=character(),stringsAsFactors=FALSE)
 Pri_tab<-data.frame(From=character(),To=character(),Type=character(),stringsAsFactors=FALSE)
-Query_tab<-data.frame(Query=character(),stringsAsFactors=FALSE)
+Query_tab<-data.frame(Query=character(),Value = character(),stringsAsFactors=FALSE)
 Ncolorsize_tab <- data.frame()
 Ecolorsize_tab <- data.frame()
 Nlegend_tab <- data.frame()

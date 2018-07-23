@@ -137,12 +137,12 @@ shinyServer(function(input,output,session){
     }
   })
 
-  output$value <- renderUI({
+  output$E_value <- renderUI({
     fit <- recFit()
     if(! is.null(fit) & ! is.null(input$inEvidence)){
       tmp = fit[[input$inEvidence]]
       valuelist = rownames(tmp$prob)
-      if(length(valuelist)) radioButtons("inValue","Value of Evidence nodes:",choices=valuelist)
+      if(length(valuelist)) radioButtons("inEValue","Value of Evidence nodes:",choices=valuelist)
     }
   })
 
@@ -151,6 +151,15 @@ shinyServer(function(input,output,session){
     if(! is.null(fit)){
       Nodelist = nodes(fit)
       selectInput("inQuery","Select the Query nodes:",Nodelist)
+    }
+  })
+
+  output$Q_value <- renderUI({
+    fit <- recFit()
+    if(! is.null(fit) & ! is.null(input$inQuery)){
+      tmp = fit[[input$inQuery]]
+      valuelist = rownames(tmp$prob)
+      if(length(valuelist)) checkboxGroupInput("inQValue","Value of Evidence nodes:",choices=valuelist,selected=valuelist)
     }
   })
 
@@ -513,7 +522,7 @@ shinyServer(function(input,output,session){
   RecE <- reactive({
     if(input$AddButtonE == n_AE + 1) {
       n_AE <<- n_AE + 1
-      Evid_tab <<- rbind(Evid_tab,data.frame(Evidence = input$inEvidence,Value = input$inValue,stringsAsFactors=FALSE))
+      Evid_tab <<- rbind(Evid_tab,data.frame(Evidence = input$inEvidence,Value = input$inEValue,stringsAsFactors=FALSE))
     }
 
     if(input$delButtonE == n_DE + 1) {
@@ -532,19 +541,23 @@ shinyServer(function(input,output,session){
     fit <- recFit()
     if(input$delButtonQ == 0 & !is.null(fit)) {
       node <- nodes(fit)[length(fit)]
-      Query_tab <<- rbind(Query_tab,data.frame(Query = node))
+      tmp = fit[[node]]
+      value = rownames(tmp$prob)
+      Query_tab <<- rbind(Query_tab,data.frame(Query = node,Value = value))
+      Query_tab <<- Query_tab[!duplicated(data.frame(Query_tab$Query,Query_tab$Value), fromLast=TRUE),,drop=F]
     }
     if(input$AddButtonQ == n_AQ + 1 ) {
       n_AQ <<- n_AQ + 1
-      Query_tab <<- rbind(Query_tab,data.frame(Query = input$inQuery,stringsAsFactors=FALSE))
-      Query_tab <<- Query_tab[!duplicated(Query_tab$Query, fromLast=TRUE),,drop=F]
-      rownames(Query_tab) <- NULL
+      Query_tab <<- rbind(Query_tab,data.frame(Query = input$inQuery,Value = input$inQValue,stringsAsFactors=FALSE))
+      Query_tab <<- Query_tab[!duplicated(data.frame(Query_tab$Query,Query_tab$Value), fromLast=TRUE),,drop=F]
     }
     if(input$delButtonQ == n_DQ + 1) {
       n_DQ <<- n_DQ + 1
-      a <- Query_tab[which(Query_tab$Query != input$inQuery),]
-      Query_tab <<- data.frame(Query = a)
+      index <- Query_tab$Query == input$inQuery & match(Query_tab$Value,input$inQValue)
+      index[is.na(index)] <- F
+      Query_tab <<- Query_tab[! index,]
     }
+    rownames(Query_tab) <- NULL
     Query_tab
   })
 
@@ -554,17 +567,19 @@ shinyServer(function(input,output,session){
   RecR <- reactive({
     result <<- data.frame()
     fit <- recFit()
-    if(nrow(RecQ()) && ! is.null(fit)){
+    Q <- RecQ()
+    if(nrow(Q) && ! is.null(fit)){
       E <- RecE()
       jtree = compile(as.grain(fit))
       jtree1 = setEvidence(jtree,E$Evidence,E$Value)
-      q <- querygrain(jtree1,nodes=Query_tab$Query,type=input$Type)
+      q <- querygrain(jtree1,nodes=unique(Q$Query),type=input$Type)
       if(input$Type == "marginal"){
         Proability <- unlist2(q)
         level <- names(Proability)
         n_level <- sapply(q,length)
         Variable <- rep(names(q),n_level)
-        result <<- rbind(result,data.frame(Variable,level,Proability,stringsAsFactors = F))
+        result_tmp <- data.frame(Variable,level,Proability,stringsAsFactors = F)
+        result <<- sqldf("select Variable,level,Proability from result_tmp,Q where Variable=Query and level=Value")
       }
       if(input$Type == "joint"){
         result <<- rbind(result,melt(q,varNames=dimnames(q),value.name = "Proability",as.is=T))

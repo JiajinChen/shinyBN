@@ -56,13 +56,17 @@ shinyUI(dashboardPage(
       fileInput("inObject","Choose your R Object(.Rdata):")
     ),
     uiOutput("evidence"),
-    uiOutput("value"),
+    uiOutput("E_value"),
     conditionalPanel(
       condition = "output.evidence",
       column(width=6,actionButton("AddButtonE", "Add!",icon=icon("plus"),lib="glyphicon")),
       column(width=6,actionButton("delButtonE", "Delete!",icon=icon("trash"),lib="glyphicon"))
     ),
     uiOutput("query"),
+    conditionalPanel(
+      condition = "input.Type == 'marginal'",
+      uiOutput("Q_value")
+    ),
     conditionalPanel(
       condition = "output.query",
       column(width=6,actionButton("AddButtonQ", "Add!",icon=icon("plus"),lib="glyphicon")),
