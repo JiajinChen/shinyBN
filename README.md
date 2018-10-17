@@ -6,7 +6,7 @@ shinyBN is a Shiny application for interactive construction, inference and visua
 ___
 ***Run APP in R:***
 
-Install ependencies:
+Install dependencies:
 ```{r,eval = FALSE}
 
 ```
