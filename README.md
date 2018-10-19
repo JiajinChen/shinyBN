@@ -9,7 +9,13 @@ ___
 Install dependencies:
 ```{r,eval = FALSE}
 install.packages("devtools")
-# 
+
+# Packages on CRAN
+
+# Packages on Bioconductor
+
+# Packages on Github
+
 ```
 
 Install shinyBN from Github:
