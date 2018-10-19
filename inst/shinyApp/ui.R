@@ -4,7 +4,7 @@ options(warn=-1)
 shinyUI(dashboardPage(
 
   # Header
-  dashboardHeader(title="Bayesian Network:",
+  dashboardHeader(title="Bayesian Network",
                   dropdownMenu(type="notifications",badgeStatus = "primary",icon=icon("question-sign",lib="glyphicon"),
                                notificationItem(icon=icon("question"),"Click to get help",href = "https://github.com/JiajinChen/shinyBN"))),
 
@@ -20,36 +20,50 @@ shinyUI(dashboardPage(
       fileInput("inFile","Choose your Raw Data(.csv):"),
       checkboxInput("inHeader","Header?",TRUE),
       selectInput("inLearnType","Type of Structure Algorithm:",c("Score-Based Algorithms","Constraint-Based Algorithms",
-                                                                 "Hybrid Algorithms")),
+                                                                 "Hybrid Algorithms","Bootstrap")),
       conditionalPanel(
         condition = "input.inLearnType == 'Constraint-Based Algorithms'",
         selectInput("inLearn1","Structure Algorithm:",c("Grow-Shrink","Incremental Association","Fast Incremental Association",
-                                                       "Interleaved Incremental Association","Max-Min Parents and Children",
-                                                       "Semi-Interleaved HITON-PC"))
+                                                       "Interleaved Incremental Association"))
       ),
       conditionalPanel(
         condition = "input.inLearnType == 'Score-Based Algorithms'",
-        selectInput("inLearn2","Structure Algorithm:",c("hill-climbing","tabu search"))
+        selectInput("inLearn2","Structure Algorithm:",c("hill-climbing","tabu search")),
+        selectInput("inScore2","Scores:",c("Multinomial log-likelihood score"="loglik","Akaike Information Criterion score"="aic","Bayesian Information Criterion score"="bic",
+                                          "Bayesian Dirichlet equivalent score"="bde","Bayesian Dirichlet sparse score"="bds","Modified Bayesian Dirichlet equivalent score"="mbde",
+                                          "Locally averaged Bayesian Dirichlet score"="bdla","K2 score"="k2"))
       ),
       conditionalPanel(
         condition = "input.inLearnType == 'Hybrid Algorithms'",
         selectInput("inLearn3","Structure Algorithm:",c("Max-Min Hill Climbing","2-phase Restricted Maximization"))
       ),
-      selectInput("inMethod","Parameter Algorithm:",c("Maximum Likelihood parameter estimation"="mle",
-                                                 "Bayesian parameter estimation"="bayes")),
+      conditionalPanel(
+        condition = "input.inLearnType == 'Bootstrap'",
+        selectInput("inLearn4","Structure Algorithm:",c("hill-climbing"="hc","tabu search"='tabu',"Grow-Shrink"='gs',"Incremental Association"='iamb',
+                                                        "Fast Incremental Association"='fast.iamb',"Interleaved Incremental Association"='inter.iamb',
+                                                        "Max-Min Hill Climbing"='mmhc',"2-phase Restricted Maximization"='rsmax2')),
+        conditionalPanel(
+          condition = "input.inLearn4 =='hc' || input.inLearn4 =='tabu'",
+          selectInput("inScore4","Score:",c("Multinomial log-likelihood score"="loglik","Akaike Information Criterion score"="aic","Bayesian Information Criterion score"="bic",
+                                          "Bayesian Dirichlet equivalent score"="bde","Bayesian Dirichlet sparse score"="bds","Modified Bayesian Dirichlet equivalent score"="mbde",
+                                          "Locally averaged Bayesian Dirichlet score"="bdla","K2 score"="k2"))),
+        radioButtons("N_Boot","Num of Boot:",c(10,500,1000),inline=T)
+      ),
       column(width=6,checkboxInput("prior_TF", "Prior?", F)),
       column(width=6,checkboxInput("prior_hide", "Hide?", F)),
       conditionalPanel(
         condition = "input.prior_TF",
         uiOutput("from"),
         uiOutput("to"),
-        conditionalPanel(
-          condition = "output.from",
-          radioButtons("BorW",NULL,c("blacklist","whitelist"),inline = T),
-          column(width=6,actionButton("AddButtonP", "Add!",icon=icon("plus"),lib="glyphicon")),
-          column(width=6,actionButton("delButtonP", "Delete!",icon=icon("trash"),lib="glyphicon"))
-        )
-      )
+        radioButtons("BorW",NULL,c("blacklist","whitelist"),inline = T),
+        column(width=4,actionButton("AddButtonP", "Add",icon=icon("plus"),lib="glyphicon")),
+        # column(width=1,NULL),
+        column(width=4,actionButton("delButtonP", "Del",icon=icon("trash"),lib="glyphicon")),
+        # column(width=1,NULL),
+        column(width=4,actionButton("GoButtonP", "Go",icon=icon("play"),lib="glyphicon"))
+      ),
+      selectInput("inMethod","Parameter Algorithm:",c("Maximum Likelihood parameter estimation"="mle",
+                                                      "Bayesian parameter estimation"="bayes"))
     ),
     conditionalPanel(
       condition = "input.inType == 'R Object(.Rdata)'",
@@ -64,8 +78,8 @@ shinyUI(dashboardPage(
     uiOutput("E_value"),
     conditionalPanel(
       condition = "output.evidence",
-      column(width=6,actionButton("AddButtonE", "Add!",icon=icon("plus"),lib="glyphicon")),
-      column(width=6,actionButton("delButtonE", "Delete!",icon=icon("trash"),lib="glyphicon"))
+      column(width=6,actionButton("AddButtonE", "Add",icon=icon("plus"),lib="glyphicon")),
+      column(width=6,actionButton("delButtonE", "Delete",icon=icon("trash"),lib="glyphicon"))
     ),
     uiOutput("query"),
     conditionalPanel(
@@ -74,25 +88,162 @@ shinyUI(dashboardPage(
     ),
     conditionalPanel(
       condition = "output.query",
-      column(width=6,actionButton("AddButtonQ", "Add!",icon=icon("plus"),lib="glyphicon")),
-      column(width=6,actionButton("delButtonQ", "Delete!",icon=icon("trash"),lib="glyphicon")),
+      column(width=6,actionButton("AddButtonQ", "Add",icon=icon("plus"),lib="glyphicon")),
+      column(width=6,actionButton("delButtonQ", "Delete",icon=icon("trash"),lib="glyphicon")),
       radioButtons("Type","Choose the type:",c("Marginal" = "marginal","Joint" = "joint"),inline=T)
     )
   ),
 
   # Body
   dashboardBody(
-    shinyDashboardThemes(
-      theme = "blue_gradient"
-      # theme = "onenote"
+
+    shinyDashboardThemeDIY(
+
+      # 蓝色 RGB: "rgb(51,105,232)"  "#4486F4"
+      # 红色 RGB: "rgb(213,15,37)"   "#EA4335"
+      # 绿色 RGB: "rgb(0,153,37)"    "#35A755"
+      # 黄色 RGB: "rgb(238,178,17)"  "#FBBB04"
+      ### general
+      appFontFamily = "Arial"
+      ,appFontColor = "rgb(0,0,0)"
+      ,bodyBackColor = "rgb(248,248,248)"
+
+      ### header
+      ,logoBackColor = "rgb(51,105,232)"  #"#4486F4"
+      # cssGradientThreeColors(
+      #   direction = "right"
+      #   ,colorStart = "rgba(44,222,235,1)"
+      #   ,colorMiddle = "rgba(44,222,235,1)"
+      #   ,colorEnd = "rgba(0,255,213,1)"
+      #   ,colorStartPos = 0
+      #   ,colorMiddlePos = 30
+      #   ,colorEndPos = 100
+      # )
+      # "rgb(51,105,232)" #"rgb(23,103,124)"     #左header
+
+      ,headerButtonBackColor = "rgb(238,238,238)" #header的按钮背景
+      ,headerButtonIconColor = "rgb(75,75,75)"    #header的按钮颜色
+      ,headerButtonBackColorHover = "rgb(210,210,210)" #header的鼠标hover按钮背景
+      ,headerButtonIconColorHover = "rgb(0,0,0)"       #header的鼠标hover按钮颜色
+
+      ,headerBackColor = "rgb(238,238,238)"  #"rgb(51,105,232)"  #右header
+      ,headerBoxShadowColor = "#aaaaaa"      #右header下面一小条阴影
+      ,headerBoxShadowSize = "2px 2px 2px"   #右header下面一小条阴影 大小
+
+      ### sidebar
+      ,sidebarBackColor = cssGradientThreeColors(   #sidebar渐变色
+        direction = "down"
+        ,colorStart = "rgb(213,15,37)"   #"rgb(20,97,117)"
+        ,colorMiddle = "rgb(238,178,17)" #"rgb(56,161,187)"
+        ,colorEnd = "rgb(0,153,37)"      #"rgb(3,22,56)"
+        ,colorStartPos = 0
+        ,colorMiddlePos = 50
+        ,colorEndPos = 100
+      )
+      ,sidebarPadding = 0   #sidebar边缘大小
+
+      ,sidebarMenuBackColor = "transparent"
+      ,sidebarMenuPadding = 0
+      ,sidebarMenuBorderRadius = 0
+
+      ,sidebarShadowRadius = "3px 5px 5px"
+      ,sidebarShadowColor = "#aaaaaa"
+
+      ,sidebarUserTextColor = "rgb(255,255,255)"
+
+      ,sidebarSearchBackColor = "rgb(55,72,80)"
+      ,sidebarSearchIconColor = "rgb(153,153,153)"
+      ,sidebarSearchBorderColor = "rgb(55,72,80)"
+
+      ,sidebarTabTextColor = "rgb(255,255,255)"
+      ,sidebarTabTextSize = 13
+      ,sidebarTabBorderStyle = "none none solid none"
+      ,sidebarTabBorderColor = "rgb(35,106,135)"
+      ,sidebarTabBorderWidth = 100
+
+      ,sidebarTabBackColorSelected = cssGradientThreeColors(
+        direction = "right"
+        ,colorStart = "rgba(44,222,235,1)"
+        ,colorMiddle = "rgba(44,222,235,1)"
+        ,colorEnd = "rgba(0,255,213,1)"
+        ,colorStartPos = 0
+        ,colorMiddlePos = 30
+        ,colorEndPos = 100
+      )
+      ,sidebarTabTextColorSelected = "rgb(0,0,0)"
+      ,sidebarTabRadiusSelected = "0px 20px 20px 0px"
+
+      ,sidebarTabBackColorHover = cssGradientThreeColors(
+        direction = "right"
+        ,colorStart = "rgba(44,222,235,1)"
+        ,colorMiddle = "rgba(44,222,235,1)"
+        ,colorEnd = "rgba(0,255,213,1)"
+        ,colorStartPos = 0
+        ,colorMiddlePos = 30
+        ,colorEndPos = 100
+      )
+      ,sidebarTabTextColorHover = "rgb(50,50,50)"
+      ,sidebarTabBorderStyleHover = "none none solid none"
+      ,sidebarTabBorderColorHover = "rgb(75,126,151)"
+      ,sidebarTabBorderWidthHover = 1
+      ,sidebarTabRadiusHover = "0px 20px 20px 0px"
+
+      ### boxes
+      ,boxBackColor = "rgb(255,255,255)"
+      ,boxBorderRadius = 5
+      ,boxShadowSize = "0px 1px 1px"
+      ,boxShadowColor = "rgba(0,0,0,.1)"
+      ,boxTitleSize = 16
+      ,boxDefaultColor = "rgb(210,214,220)"
+      ,boxPrimaryColor = "rgba(44,222,235,1)"
+      ,boxSuccessColor = "rgba(0,255,213,1)"
+      ,boxWarningColor = "rgb(244,156,104)"
+      ,boxDangerColor = "rgb(255,88,55)"
+
+      ,tabBoxTabColor = "rgb(255,255,255)"
+      ,tabBoxTabTextSize = 14
+      ,tabBoxTabTextColor = "rgb(0,0,0)"
+      ,tabBoxTabTextColorSelected = "rgb(0,0,0)"
+      ,tabBoxBackColor = "rgb(255,255,255)"
+      ,tabBoxHighlightColor = "rgba(44,222,235,1)"
+      ,tabBoxBorderRadius = 5
+
+      ### inputs
+      ,buttonBackColor = "rgb(245,245,245)"
+      ,buttonTextColor = "rgb(0,0,0)"
+      ,buttonBorderColor = "rgb(200,200,200)"
+      ,buttonBorderRadius = 5
+
+      ,buttonBackColorHover = "rgb(235,235,235)"
+      ,buttonTextColorHover = "rgb(100,100,100)"
+      ,buttonBorderColorHover = "rgb(200,200,200)"
+
+      ,textboxBackColor = "rgb(255,255,255)"
+      ,textboxBorderColor = "rgb(200,200,200)"
+      ,textboxBorderRadius = 5
+      ,textboxBackColorSelect = "rgb(245,245,245)"
+      ,textboxBorderColorSelect = "rgb(200,200,200)"
+
+      ### tables
+      ,tableBackColor = "rgb(255,255,255)"
+      ,tableBorderColor = "rgb(240,240,240)"
+      ,tableBorderTopSize = 1
+      ,tableBorderRowSize = 1
+
     ),
+
+    # theme_self,
+    # shinyDashboardThemes(
+    #   theme = "blue_gradient"
+    #   # theme = "onenote"
+    # ),
     tabsetPanel(
       # Main Panel
       tabPanel("Main",
                br(),
                uiOutput("Main"),
                conditionalPanel(
-                 condition = "input.prior_TF &  ! input.prior_hide",
+                 condition = "input.inType == 'Raw Data(.csv)' & input.prior_TF &  ! input.prior_hide",
                  column(width=6,dataTableOutput("Pri_table"))
                ),
                fixedPanel(top = 65, right=80, width=430,height=15,draggable = F,
@@ -120,14 +271,34 @@ shinyUI(dashboardPage(
                conditionalPanel(
                  condition = "input.inType != 'Render Continue...'",
                  column(width=12,h4("Please choose the initial parameters for all nodes:")),
-                 column(width=6,selectInput("IN_color","Nodes Color:",c("lightblue","red","orange","yellow","green","blue","Other"))),
-                 conditionalPanel(
-                   condition = "input.IN_color == 'Other'",
-                   column(width=6,textInput("IN_Other_color","Input Node Color:",""))
-                 ),
-                 column(width=6,selectInput("IN_Nshape","Nodes Shape:",c("Circle","Square","Triangle","Rhombus"))),
-                 column(width=6,sliderInput("IN_Nsize","Nodes Size:",min=1,max=25,value=12,step=1)),
-                 column(width=6,sliderInput("IN_Tsize","Text size:",min=1,max=10,value=5,step=0.5))
+                 column(width=12,
+                        column(width=4,radioButtons("IN_color_type","Nodes Color:",c("Self-defined","SCI-Style","Pic-Style"))),
+                        conditionalPanel(
+                          condition = "input.IN_color_type == 'Self-defined'",
+                          column(width=4,selectInput("IN_color","Nodes Color:",c("lightblue","red","orange","yellow","green","blue","Other"))),
+                          conditionalPanel(
+                            condition = "input.IN_color == 'Other'",
+                            column(width=4,textInput("IN_Other_color","Input Node Color:",""))
+                          )),
+                        conditionalPanel(
+                          condition = "input.IN_color_type == 'SCI-Style'",
+                          column(width=4,selectInput("SCI_Name","Style:",list(`Journal` = c("NPG","Lancet","JAMA","NEJM","JCO","AAAS"),
+                                                                              `Technology` = c("Google","Twitter","Facebook","Airbnb","Etsy","23andme"),
+                                                                              `Other`   = c("D3","LocusZoom","Futurama","UCSCGB","Tron Legacy","Star Trek"))))
+                        ),
+                        conditionalPanel(
+                          condition = "input.IN_color_type == 'Pic-Style'",
+                          column(width=4,fileInput("Pic_Name","Picture:",accept=c('image/png',
+                                                                                  'image/jpeg',
+                                                                                  'image/jpg')))),
+                        conditionalPanel(
+                          condition = "input.IN_color_type == 'SCI-Style' | input.IN_color_type == 'Pic-Style'",
+                          column(width=4,uiOutput("Sci_Pic_UI"))
+                        )),
+                 column(width=12,
+                        column(width=4,selectInput("IN_Nshape","Nodes Shape:",c("Circle","Square","Triangle","Rhombus"))),
+                        column(width=4,sliderInput("IN_Nsize","Nodes Size:",min=1,max=25,value=12,step=1)),
+                        column(width=4,sliderInput("IN_Tsize","Text size:",min=1,max=10,value=5,step=0.5)))
                ),
                column(width=12,h4("Change individual nodes:")),
                column(width=6,uiOutput("N")),
@@ -135,7 +306,22 @@ shinyUI(dashboardPage(
                                           c("Node Color","Node Shape","Node Size","Text Size"))),
                conditionalPanel(
                  condition = "input.Nodes_type == 'Node Color'",
-                 column(width=6,selectInput("N_color","Node Color:",c("lightblue","red","orange","yellow","green","blue","Other"))),
+                 conditionalPanel(
+                   condition = "input.inType == 'Render Continue...'",
+                   column(width=4,radioButtons("IN_color_type2","Nodes Color:",c("Self-defined","SCI-Style","Pic-Style"))),
+                   conditionalPanel(
+                     condition = "input.IN_color_type2 == 'SCI-Style'",
+                     column(width=4,selectInput("SCI_Name2","Style:",list(`Journal` = c("NPG","Lancet","JAMA","NEJM","JCO","AAAS"),
+                                                                          `Technology` = c("Google","Twitter","Facebook","Airbnb","Etsy","23andme"),
+                                                                          `Other`   = c("D3","LocusZoom","Futurama","UCSCGB","Tron Legacy","Star Trek"))))
+                   ),
+                   conditionalPanel(
+                     condition = "input.IN_color_type2 == 'Pic-Style'",
+                     column(width=4,fileInput("Pic_Name2","Picture:",accept=c('image/png',
+                                                                              'image/jpeg',
+                                                                              'image/jpg'))))
+                 ),
+                 column(width=4,uiOutput("N_colorlist")),
                  conditionalPanel(
                    condition = "input.N_color == 'Other'",
                    column(width=6,textInput("N_Other_color","Input Node color:",""))
@@ -147,16 +333,16 @@ shinyUI(dashboardPage(
                ),
                conditionalPanel(
                  condition = "input.Nodes_type == 'Node Size'",
-                 column(width=6,sliderInput("N_Nsize","Node Size:",min=1,max=25,value=8,step=1))
+                 column(width=6,sliderInput("N_Nsize","Node Size:",min=1,max=25,value=12,step=1))
                ),
                conditionalPanel(
                  condition = "input.Nodes_type == 'Text Size'",
-                 column(width=6,sliderInput("N_Tsize","Text Size:",min=1,max=10,value=3,step=1))
+                 column(width=6,sliderInput("N_Tsize","Text Size:",min=1,max=10,value=5,step=1))
                ),
                column(width=12,
-                      column(width=4,actionButton("AddButtonNodes", "Add!",icon=icon("plus"),lib="glyphicon")),
-                      column(width=4,actionButton("DelButtonNodes", "Delete!",icon=icon("trash"),lib="glyphicon")),
-                      column(width=4,actionButton("ClearNodes", "Clear!",icon=icon("refresh"),lib="glyphicon"))),
+                      column(width=4,actionButton("AddButtonNodes", "Add",icon=icon("plus"),lib="glyphicon")),
+                      column(width=4,actionButton("DelButtonNodes", "Delete",icon=icon("trash"),lib="glyphicon")),
+                      column(width=4,actionButton("ClearNodes", "Clear",icon=icon("refresh"),lib="glyphicon"))),
                br(),
                column(width=12,dataTableOutput("Ncolorsize_table")),
 
@@ -241,9 +427,9 @@ shinyUI(dashboardPage(
                ),
                br(),
                column(width=12,
-                      column(width=4,actionButton("AddButtonEdges", "Add!",icon=icon("plus"),lib="glyphicon")),
-                      column(width=4,actionButton("DelButtonEdges", "Delete!",icon=icon("trash"),lib="glyphicon")),
-                      column(width=4,actionButton("ClearEdges", "Clear!",icon=icon("refresh"),lib="glyphicon"))),
+                      column(width=4,actionButton("AddButtonEdges", "Add",icon=icon("plus"),lib="glyphicon")),
+                      column(width=4,actionButton("DelButtonEdges", "Delete",icon=icon("trash"),lib="glyphicon")),
+                      column(width=4,actionButton("ClearEdges", "Clear",icon=icon("refresh"),lib="glyphicon"))),
                br(),
                column(width=12,dataTableOutput("Ecolorsize_table")),
 

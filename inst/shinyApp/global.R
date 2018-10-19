@@ -7,6 +7,8 @@ require(bnlearn)
 require(gRain)
 require(Rgraphviz)
 require(ggplot2)
+require(ggsci)
+require(rPlotter)
 require(reshape2)
 require(AnnotationDbi)
 require(svgPanZoom)
@@ -39,6 +41,9 @@ n_AQ <- 0
 n_DQ <- 0
 n_AP <- 0
 n_DP <- 0
+n_GP <- 0
+white <- NULL
+black <- NULL
 n_ANode  <- 0
 n_DNode  <- 0
 n_AEdge  <- 0

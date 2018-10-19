@@ -5,17 +5,36 @@ options(shiny.maxRequestSize=30*1024^2)
 #SERVER
 shinyServer(function(input,output,session){
 
-  #Structure Prior
+  # Structure Prior
   RecP <- reactive({
+    file <- input$inFile
+    if(!is.null(file)){
+      data <- read.csv(file$datapath, header = input$inHeader,colClasses = "factor")
+      nodelist = colnames(data)
+    }
+
     if(input$AddButtonP == n_AP + 1) {
       n_AP <<- n_AP + 1
-      if(input$in_From != input$in_To) Pri_tab <<- rbind(Pri_tab,data.frame(From=input$in_From,To=input$in_To,Type=input$BorW,stringsAsFactors=FALSE))
+      if(input$in_From == "All nodes" & input$in_To != "All nodes"){
+        Pri_tab <<- rbind(Pri_tab,data.frame(From=nodelist,To=input$in_To,Type=input$BorW,stringsAsFactors=FALSE))
+      }else if(input$in_From != "All nodes" & input$in_To == "All nodes"){
+        Pri_tab <<- rbind(Pri_tab,data.frame(From=input$in_From,To=nodelist,Type=input$BorW,stringsAsFactors=FALSE))
+      }else if(input$in_From != "All nodes" & input$in_To != "All nodes"){
+        Pri_tab <<- rbind(Pri_tab,data.frame(From=input$in_From,To=input$in_To,Type=input$BorW,stringsAsFactors=FALSE))
+      }
     }
     if(input$delButtonP == n_DP + 1) {
       n_DP <<- n_DP + 1
-      indexP = which(Pri_tab$From == input$in_From & Pri_tab$To == input$in_To & Pri_tab$Type == input$BorW)
+      if(input$in_From == "All nodes" & input$in_To != "All nodes"){
+        indexP = which(Pri_tab$To == input$in_To & Pri_tab$Type == input$BorW)
+      }else if(input$in_From != "All nodes" & input$in_To == "All nodes"){
+        indexP = which(Pri_tab$From == input$in_From & Pri_tab$Type == input$BorW)
+      }else if(input$in_From != "All nodes" & input$in_To != "All nodes"){
+        indexP = which(Pri_tab$From == input$in_From & Pri_tab$To == input$in_To & Pri_tab$Type == input$BorW)
+      }
       if(length(indexP)) Pri_tab <<- Pri_tab[-indexP,]
     }
+    Pri_tab <<- Pri_tab[which(Pri_tab$From != Pri_tab$To),]
     Pri_tab <<- Pri_tab[!duplicated(data.frame(Pri_tab$From,Pri_tab$To,Pri_tab$Type), fromLast=TRUE), ]
     rownames(Pri_tab) <- NULL
     Pri_tab
@@ -23,20 +42,6 @@ shinyServer(function(input,output,session){
   output$Pri_table <- renderDataTable(RecP(),class="compact",rownames = FALSE,options=list(searching=F,
                                                                                            columnDefs=list(list(className = 'dt-center', targets = 1))))
 
-  recPrior <- reactive({
-
-    Prior <- RecP()
-    colnames(Prior) <- c("from","to","type")
-
-    white <- Prior[Prior$type == "whitelist",]
-    white <- white[,-3]
-    if(nrow(white) == 0) white <- NULL
-    black <- Prior[Prior$type == "blacklist",]
-    black <- black[,-3]
-    if(nrow(black) == 0) black <- NULL
-    renderP <- list(black=black,white=white)
-    renderP
-  })
 
   #Input the network in class bn.fit
   recFit <- reactive({
@@ -64,21 +69,47 @@ shinyServer(function(input,output,session){
       if(! is.null(file)){
         data <- read.csv(file$datapath, header = input$inHeader,colClasses = "factor")
         if(! is.null(data)){
+
+          # Prior information
+          if(input$GoButtonP == n_GP + 1){
+            n_GP <<- n_GP + 1
+            Prior <- RecP()
+            colnames(Prior) <- c("from","to","type")
+            white <<- Prior[Prior$type == "whitelist",]
+            white <<- white[,-3]
+            if(nrow(white) == 0) white <<- NULL
+
+            black <<- Prior[Prior$type == "blacklist",]
+            black <<- black[,-3]
+            if(nrow(black) == 0) black <<- NULL
+          }
+
           if(input$inLearnType == 'Constraint-Based Algorithms'){
-            if(input$inLearn1 == 'Grow-Shrink') dag <- gs(data,blacklist = recPrior()[["black"]],whitelist = recPrior()[["white"]])
-            else if(input$inLearn1 == 'Incremental Association') dag <- iamb(data,blacklist = recPrior()[["black"]],whitelist = recPrior()[["white"]])
-            else if(input$inLearn1 == 'Fast Incremental Association') dag <- fast.iamb(data,blacklist = recPrior()[["black"]],whitelist = recPrior()[["white"]])
-            else if(input$inLearn1 == 'Interleaved Incremental Association') dag <- inter.iamb(data,blacklist = recPrior()[["black"]],whitelist = recPrior()[["white"]])
-            else if(input$inLearn1 == 'Max-Min Parents and Children') dag <- mmpc(data,blacklist = recPrior()[["black"]],whitelist = recPrior()[["white"]])
-            else if(input$inLearn1 == 'Semi-Interleaved HITON-PC') dag <- si.hiton.pc(data,blacklist = recPrior()[["black"]],whitelist = recPrior()[["white"]])
+            if(input$inLearn1 == 'Grow-Shrink') dag <- gs(data,blacklist = black,whitelist = white)
+            else if(input$inLearn1 == 'Incremental Association') dag <- iamb(data,blacklist = black,whitelist = white)
+            else if(input$inLearn1 == 'Fast Incremental Association') dag <- fast.iamb(data,blacklist = black,whitelist = white)
+            else if(input$inLearn1 == 'Interleaved Incremental Association') dag <- inter.iamb(data,blacklist = black,whitelist = white)
+            # else if(input$inLearn1 == 'Max-Min Parents and Children') dag <- mmpc(data,blacklist = black,whitelist = white)
+            # else if(input$inLearn1 == 'Semi-Interleaved HITON-PC') dag <- si.hiton.pc(data,blacklist = black,whitelist = white)
           }
           else if(input$inLearnType == 'Score-Based Algorithms'){
-            if(input$inLearn2 == 'hill-climbing') dag <- hc(data,blacklist = recPrior()[["black"]],whitelist = recPrior()[["white"]])
-            else if(input$inLearn2 == 'tabu search') dag <- tabu(data,blacklist = recPrior()[["black"]],whitelist = recPrior()[["white"]])
+            if(input$inLearn2 == 'hill-climbing') dag <- hc(data,score=input$inScore2,blacklist = black,whitelist = white)
+            else if(input$inLearn2 == 'tabu search') dag <- tabu(data,score=input$inScore2,blacklist = black,whitelist = white)
           }
           else if(input$inLearnType == 'Hybrid Algorithms'){
-            if(input$inLearn3 == 'Max-Min Hill Climbing') dag <- mmhc(data,blacklist = recPrior()[["black"]],whitelist = recPrior()[["white"]])
-            else if(input$inLearn3 == '2-phase Restricted Maximization') dag <- rsmax2(data,blacklist = recPrior()[["black"]],whitelist = recPrior()[["white"]])
+            if(input$inLearn3 == 'Max-Min Hill Climbing') dag <- mmhc(data,blacklist = black,whitelist = white)
+            else if(input$inLearn3 == '2-phase Restricted Maximization') dag <- rsmax2(data,blacklist = black,whitelist = white)
+          }
+          else if(input$inLearnType == 'Bootstrap'){
+            if(input$inLearn4 %in% c('gs','iamb','fast.iamb','inter.iamb','mmhc','rsmax2')){
+              boot = boot.strength(data=data,R = as.numeric(input$N_Boot),algorithm = input$inLearn4,
+                                   algorithm.args = list(blacklist = black,whitelist = white))
+            }else{
+              boot = boot.strength(data=data,R = as.numeric(input$N_Boot),algorithm = input$inLearn4,
+                                   algorithm.args = list(score=input$inScore4,blacklist = black,whitelist = white))
+            }
+            boot[(boot$strength > 0.85) & (boot$direction >=0.5),]
+            dag = averaged.network(boot,threshold = 0.85)
           }
           bn_fit <- bn.fit(dag,data,method = input$inMethod)
           if(! "bn.fit" %in% class(bn_fit)) bn_fit <- NULL
@@ -179,17 +210,19 @@ shinyServer(function(input,output,session){
   })
 
   output$from <- renderUI({
-    fit <- recFit()
-    if(! is.null(fit)){
-      Nodelist = nodes(fit)
+    file <- input$inFile
+    if(! is.null(file)){
+      data <- read.csv(file$datapath, header = input$inHeader,colClasses = "factor")
+      Nodelist = c("All nodes",colnames(data))
       selectInput("in_From","From:",Nodelist)
     }
   })
 
   output$to <- renderUI({
-    fit <- recFit()
-    if(! is.null(fit)){
-      Nodelist = nodes(fit)
+    file <- input$inFile
+    if(! is.null(file)){
+      data <- read.csv(file$datapath, header = input$inHeader,colClasses = "factor")
+      Nodelist = c("All nodes",colnames(data))
       selectInput("in_To","To:",Nodelist)
     }
   })
@@ -222,6 +255,78 @@ shinyServer(function(input,output,session){
     if(input$IE_size_type == 'Arc Strength') Renderlist <- c("Edge Color","Edge Type")
     else Renderlist <- c("Edge Color","Edge Type","Edge Width")
     selectInput("Edges_type","Select the Type:",Renderlist)
+  })
+
+  recSci_Pic <- reactive({
+    if(input$inType != "Render Continue..."){
+      if(input$IN_color_type == 'SCI-Style'){
+        colorlist <- NULL
+        if(input$SCI_Name == 'NPG') colorlist <- pal_npg("nrc")(10)
+        else if(input$SCI_Name == 'Lancet') colorlist <- pal_lancet("lanonc")(9)
+        else if(input$SCI_Name == 'JAMA') colorlist <- pal_jama("default")(7)
+        else if(input$SCI_Name == 'NEJM') colorlist <- pal_nejm("default")(8)
+        else if(input$SCI_Name == 'JCO') colorlist <- pal_jco("default")(10)
+        else if(input$SCI_Name == 'AAAS') colorlist <- pal_aaas("default")(10)
+        else if(input$SCI_Name == 'D3') colorlist <- pal_d3("category10")(10)
+        else if(input$SCI_Name == 'UCSCGB') colorlist <- pal_ucscgb("default")(11)[c(1:9,11)]
+        else if(input$SCI_Name == 'LocusZoom') colorlist <- pal_locuszoom("default")(7)
+        else if(input$SCI_Name == 'Futurama') colorlist <- pal_futurama("planetexpress")(9)[c(1:4,8:9)]
+        else if(input$SCI_Name == 'Tron Legacy') colorlist <- pal_tron("legacy")(7)
+        else if(input$SCI_Name == 'Star Trek') colorlist <- pal_startrek("uniform")(7)
+        else if(input$SCI_Name == 'Google') colorlist <- c("#5380E4", "#E12A3C", "#FFBF03","#00B723")
+        else if(input$SCI_Name == 'Twitter') colorlist <- c("#55ACEE", "#292f33", "#8899a6", "#e1e8ed")
+        else if(input$SCI_Name == 'Facebook') colorlist <- c("#3b5998","#6d84b4", "#afbdd4", "#d8dfea")
+        else if(input$SCI_Name == 'Airbnb') colorlist <- c("#FF5A5F","#FFB400", "#007A87", "#FFAA91", "#7B0051")
+        else if(input$SCI_Name == 'Etsy') colorlist <- c("#F14000", "#67B6C3", "#F0DA47", "#EBEBE6", "#D0D0CB")
+        else if(input$SCI_Name == '23andme') colorlist <- c("#3595D6", "#92C746", "#F2C100", "#FF6D19", "#6F3598")
+      }else if(input$IN_color_type == 'Pic-Style'){
+        if(! is.null(input$Pic_Name)){
+          colorlist <- extract_colours(input$Pic_Name$datapath)
+        }
+      }
+    }else{
+      if(input$IN_color_type2 == 'SCI-Style'){
+        colorlist <- NULL
+        if(input$SCI_Name2 == 'NPG') colorlist <- pal_npg("nrc")(10)
+        else if(input$SCI_Name2 == 'Lancet') colorlist <- pal_lancet("lanonc")(9)
+        else if(input$SCI_Name2 == 'JAMA') colorlist <- pal_jama("default")(7)
+        else if(input$SCI_Name2 == 'NEJM') colorlist <- pal_nejm("default")(8)
+        else if(input$SCI_Name2 == 'JCO') colorlist <- pal_jco("default")(10)
+        else if(input$SCI_Name2 == 'AAAS') colorlist <- pal_aaas("default")(10)
+        else if(input$SCI_Name2 == 'D3') colorlist <- pal_d3("category10")(10)
+        else if(input$SCI_Name2 == 'UCSCGB') colorlist <- pal_ucscgb("default")(11)[c(1:9,11)]
+        else if(input$SCI_Name2 == 'LocusZoom') colorlist <- pal_locuszoom("default")(7)
+        else if(input$SCI_Name2 == 'Futurama') colorlist <- pal_futurama("planetexpress")(9)[c(1:4,8:9)]
+        else if(input$SCI_Name2 == 'Tron Legacy') colorlist <- pal_tron("legacy")(7)
+        else if(input$SCI_Name2 == 'Star Trek') colorlist <- pal_startrek("uniform")(7)
+        else if(input$SCI_Name2 == 'Google') colorlist <- c("#5380E4", "#E12A3C", "#FFBF03","#00B723")
+        else if(input$SCI_Name2 == 'Twitter') colorlist <- c("#55ACEE", "#292f33", "#8899a6", "#e1e8ed")
+        else if(input$SCI_Name2 == 'Facebook') colorlist <- c("#3b5998","#6d84b4", "#afbdd4", "#d8dfea")
+        else if(input$SCI_Name2 == 'Airbnb') colorlist <- c("#FF5A5F","#FFB400", "#007A87", "#FFAA91", "#7B0051")
+        else if(input$SCI_Name2 == 'Etsy') colorlist <- c("#F14000", "#67B6C3", "#F0DA47", "#EBEBE6", "#D0D0CB")
+        else if(input$SCI_Name2 == '23andme') colorlist <- c("#3595D6", "#92C746", "#F2C100", "#FF6D19", "#6F3598")
+      }else if(input$IN_color_type2 == 'Pic-Style'){
+        if(! is.null(input$Pic_Name2)){
+          colorlist <- extract_colours(input$Pic_Name2$datapath)
+        }
+      }
+    }
+  })
+
+  output$Sci_Pic_UI <- renderUI({
+    colorchoose <- recSci_Pic()
+    if(! is.null(colorchoose)) selectInput("Sci_Pic_Color","Nodes Color:",colorchoose)
+  })
+
+  output$N_colorlist <- renderUI({
+    if(input$inType != "Render Continue..."){
+      if(input$IN_color_type == 'Self-defined') color_list <- c("lightblue","red","orange","yellow","green","blue","Other")
+      else color_list <- recSci_Pic()
+    }else{
+      if(input$IN_color_type2 == 'Self-defined') color_list <- c("lightblue","red","orange","yellow","green","blue","Other")
+      else color_list <- recSci_Pic()
+    }
+    selectInput("N_color","Nodes Color:",color_list)
   })
 
   output$Main <- renderUI({
@@ -257,6 +362,7 @@ shinyServer(function(input,output,session){
                                           column(width=6,textInput("GC_Color",h4("Input the color:"),"green,orange,red")),
                                           column(width=12,helpText("Notes: Separated by a comma.")),
                                           column(width=6,textInput("GC_Label",h4("Input the label:"),"Low,Middle,High")),
+                                          column(width=6,sliderInput("RLegend_TextSize","Label Size:",min=8,max=16,value=10,step=0.5)),
                                           column(width=12,helpText("Notes: Separated by a comma. If not, please input NULL.")),
                                           column(width=12,
                                                  column(width=6,numericInput("RLegend_x","Input the X position:",90,min=0,max = 100)),
@@ -266,7 +372,6 @@ shinyServer(function(input,output,session){
                                         )
                                )
                         ))))
-
       }
     }
     ui
@@ -365,9 +470,13 @@ shinyServer(function(input,output,session){
     if(! is.null(fit) | ! is.null(Cont)){
       if(! is.null(fit)){
         nodes <- nodes(fit)
+
         # Default parameter
-        if(input$IN_color == 'Other') Ncol <- rep(as.character(input$IN_Other_color),length(nodes))
-        else Ncol <- rep(as.character(input$IN_color),length(nodes))
+        if(input$IN_color_type == 'Self-defined'){
+          if(input$IN_color == 'Other') Ncol <- rep(as.character(input$IN_Other_color),length(nodes))
+          else Ncol <- rep(as.character(input$IN_color),length(nodes))
+        }else Ncol <- rep(input$Sci_Pic_Color,length(nodes))
+
         Nsize  <- rep(input$IN_Nsize,length(nodes))
         Tsize  <- rep(input$IN_Tsize,length(nodes))
         Nshape <- rep(input$IN_Nshape,length(nodes))
@@ -462,14 +571,8 @@ shinyServer(function(input,output,session){
     fit <- recFit()
     Cont<- RecContinue()
     if(! is.null(fit) | ! is.null(Cont)){
-      if(! is.null(fit)){
-        NCol   = recRendN()[["Ncol"]]
-        NShape = recRendN()[["Nshape"]]
-      }
-      else{
-        NCol   = Cont[["Node"]]$node_color
-        NShape = Cont[["Node"]]$node_shape
-      }
+      NCol   = recRendN()[["Ncol"]]
+      NShape = recRendN()[["Nshape"]]
       NShape[NShape==19]<-"Circle"
       NShape[NShape==15]<-"Square"
       NShape[NShape==17]<-"Triangle"
@@ -484,14 +587,8 @@ shinyServer(function(input,output,session){
     fit <- recFit()
     Cont<- RecContinue()
     if(! is.null(fit) | ! is.null(Cont)){
-      if(! is.null(fit)){
-        ECol   = recRendE()[["Ecol"]]
-        Etype  = recRendE()[["Elty"]]
-      }
-      else{
-        ECol   = Cont[["Edge"]]$edge_color
-        Etype = Cont[["Edge"]]$edge_lty
-      }
+      ECol   = recRendE()[["Ecol"]]
+      Etype  = recRendE()[["Elty"]]
       E_Leg <- data.frame(Edge.Color = ECol,Edge.Type = Etype)
       E_Leg<-E_Leg[! duplicated(E_Leg),]
       E_Leg
@@ -521,7 +618,7 @@ shinyServer(function(input,output,session){
         y_position = as.numeric(Cont[["Node"]]$y)
       }
 
-      size <- recRendN()[["Nsize"]]
+      size  = recRendN()[["Nsize"]]
       shape = as.numeric(recRendN()[["Nshape"]])
       ncolor= recRendN()[["Ncol"]]
       Tsize = recRendN()[["Tsize"]]
@@ -542,31 +639,31 @@ shinyServer(function(input,output,session){
 
       ltotal=paste(lcolor,lty,sep="")
       names(lty)=ltotal
-      Eleg=data.frame(lty,lcolor)
+      Eleg=data.frame(lty,lcolor,stringsAsFactors=F)
       Eleg=Eleg[! duplicated(Eleg),]
 
 
-      ntotal=paste(ncolor,shape,sep="")
+      ntotal<<-paste(ncolor,shape,sep="")
       names(shape)=ntotal
-      Nleg=data.frame(shape,ncolor)
+      Nleg=data.frame(shape,ncolor,stringsAsFactors=F)
       Nleg=Nleg[! duplicated(Nleg),]
 
       uni_l = unique(ltotal)
-      nui_n = unique(ntotal)
-      L_COLOR <- Eleg$lcolor[order(uni_l)]
-      N_COLOR <- Nleg$ncolor[order(nui_n)]
+      nui_n <<- unique(ntotal)
+      L_COLOR <- Eleg$lcolor
+      N_COLOR <- Nleg$ncolor
 
       Nlabel = unlist(strsplit(input$N_Label,",",fixed=T))
       Elabel = unlist(strsplit(input$E_Label,",",fixed=T))
-      if(length(Nlabel)==length(nui_n)) Nlabel <- Nlabel[order(nui_n)]
-      else Nlabel[1] <- "Mismatched Nodes Label number"
-      if(length(Elabel)==length(uni_l)) Elabel <- Elabel[order(uni_l)]
-      else Elabel[1] <- "Mismatched Edges Label number"
+      if(length(Nlabel)==length(nui_n)) Nlabel <- Nlabel
+      else Nlabel <- rep("Mismatched Nodes Label number",length(nui_n))
+      if(length(Elabel)==length(uni_l)) Elabel <- Elabel
+      else Elabel <- rep("Mismatched Edges Label number",length(uni_l))
 
 
       Gsvg <- ggplot(node_xy,aes(x=x_position,y=y_position))+
         geom_segment(data=node_edge_xy,aes(x = x,y = y,xend = arrow_tx,yend = arrow_ty,lty=ltotal,color=lcolor,size=E_size_strength),arrow=arrow(length=unit(E_size_strength+1.5,"mm"),type="closed"))+
-        geom_point(aes(shape=ntotal,color=ncolor,size=size))+
+        geom_point(aes(shape=factor(ntotal,levels=nui_n),color=ncolor,size=size))+
         geom_text(aes(label=nodes),size=Tsize)+
         theme(panel.background = element_rect(fill = "transparent",colour = NA),
               panel.grid.minor = element_blank(),
@@ -744,6 +841,7 @@ shinyServer(function(input,output,session){
       node <- nodes(fit)[length(fit)]
       tmp = fit[[node]]
       value = rownames(tmp$prob)
+      Query_tab <<-data.frame(Query=character(),Value = character(),stringsAsFactors=FALSE)
       Query_tab <<- rbind(Query_tab,data.frame(Query = node,Value = value))
       Query_tab <<- Query_tab[!duplicated(data.frame(Query_tab$Query,Query_tab$Value), fromLast=TRUE),,drop=F]
     }
@@ -766,7 +864,7 @@ shinyServer(function(input,output,session){
                                                                             columnDefs=list(list(className = 'dt-center', targets = 1))))
 
   RecR <- reactive({
-    result <<- data.frame()
+    result <- data.frame()
     fit <- recFit()
     Q <- RecQ()
     if(nrow(Q) && ! is.null(fit)){
@@ -780,10 +878,10 @@ shinyServer(function(input,output,session){
         n_level <- sapply(q,length)
         Variable <- rep(names(q),n_level)
         result_tmp <- data.frame(Variable,Level,Proability,stringsAsFactors = F)
-        result <<- sqldf("select Variable,Level,Proability from result_tmp,Q where Variable=Query and Level=Value")
+        result <- sqldf("select Variable,Level,Proability from result_tmp,Q where Variable=Query and Level=Value")
       }
       if(input$Type == "joint"){
-        result <<- rbind(result,melt(q,varNames=dimnames(q),value.name = "Proability",as.is=T))
+        result <- rbind(result,melt(q,varNames=dimnames(q),value.name = "Proability",as.is=T))
       }
     }
     result
@@ -793,7 +891,7 @@ shinyServer(function(input,output,session){
   output$ResultPlot <- renderPlot({
     if(nrow(RecR())){
       data <- RecR()
-      data$Proability <- round(data$Proability*100,1)
+      data$Proability <- round(data$Proability*100,2)
 
       Interval <- as.numeric(unlist(strsplit(input$GC_Interval,",",fixed=T)))
       Color <- unlist(strsplit(input$GC_Color,",",fixed=T))
@@ -807,8 +905,8 @@ shinyServer(function(input,output,session){
       if(input$Type == "marginal"){
         x <- paste(data$Variable,":",data$Level,sep="")
         data_plot <- data.frame(x=x,p=data$Proability)
-        g <<- ggplot(data=data_plot,aes(x))+
-          geom_bar(aes(weight=p),fill="lightblue")+
+        g <<- ggplot(data=data_plot,aes(x=x,y=p))+
+          geom_bar(stat = "identity",fill="lightblue")+
           geom_text(aes(x=x,y=p+4,label=p))+
           scale_y_continuous("Predict  Probability (%)",expand=c(0,0),lim=c(0,105))+
           scale_x_discrete(NULL)+
@@ -821,15 +919,22 @@ shinyServer(function(input,output,session){
                 axis.title.y = element_text(angle=90,size = 14))
         if(input$GC_TF){
           index <- sapply(data$Proability,function(a){sum(a > Interval)})
-          data_plot$col <- Color[index+1]
-          ucol <- unique(data_plot$col)
-          names(ucol) <- ucol
-          lab <- Label[index+1]
-          lab <- unique(lab)
-          lab <- lab[order(unique(ucol))]
-          g <<- g + geom_bar(data= data_plot,aes(weight=p,fill=col))+
-            scale_fill_manual(NULL,values=ucol,label = lab)+
-            theme(legend.position = c(input$RLegend_x/100,input$RLegend_y/100))
+          data_plot$col <- Label[index+1]
+          g <<- ggplot(data=data_plot,aes(x=x,y=p,fill=col))+
+            geom_bar(stat = "identity")+
+            geom_text(aes(x=x,y=p+4,label=p))+
+            scale_fill_manual(NULL,values=Color,limits = Label)+
+            scale_y_continuous("Predict  Probability (%)",expand=c(0,0),lim=c(0,105))+
+            scale_x_discrete(NULL)+
+            theme(panel.background = element_rect(fill = "transparent",colour = NA),
+                  panel.grid.minor = element_blank(),
+                  panel.grid.major = element_blank(),
+                  plot.background = element_rect(fill = "transparent",colour = NA),
+                  axis.line = element_line(colour = "black"),
+                  axis.text.x = element_text(size=10),
+                  axis.title.y = element_text(angle=90,size = 14),
+                  legend.position = c(input$RLegend_x/100,input$RLegend_y/100),
+                  legend.text = element_text(size=input$RLegend_TextSize))
           if(input$GC_Label== 'NULL') g <<- g + theme(legend.position='none')
         }
         g
@@ -837,8 +942,8 @@ shinyServer(function(input,output,session){
         nc <- ncol(data) - 1
         nr <- nrow(data)
         data$IndexXxXxX <- letters[1:nr]
-        data2 <- data.frame(lx=rep(data$IndexXxXxX,nc),ly=rep(1:nc*-4,each=nr),lab=unlist2(data[,1:nc]),stringsAsFactors = F)
-        g <<-ggplot(data,aes(x=IndexXxXxX))+
+        data2 <- data.frame(lx=rep(data$IndexXxXxX,nc),ly=rep(1:nc*-4,each=nr),lab=unlist2(data[,1:nc]),stringsAsFactors=F)
+        g <<- ggplot(data,aes(x=IndexXxXxX))+
           geom_bar(aes(weight=Proability),fill="lightblue")+
           geom_text(aes(x=IndexXxXxX,y=Proability+4,label=Proability))+
           geom_text(data = data2,aes(x = lx,y = ly,label=lab))+
@@ -846,25 +951,40 @@ shinyServer(function(input,output,session){
           scale_y_continuous("Predict  Probability(%)",expand=c(0,0),lim=c(nc*-5,105),breaks=c(1:nc*-4,seq(20,100,20)),
                              labels=c(colnames(data)[1:nc],seq(20,100,20)))+
           geom_hline(aes(yintercept=0))+
-          geom_line(data=data.frame(n=c(0,0),m=c(0,100)),aes(n,m))+
+          geom_line(data=data.frame(n=c(0,0),m=c(0,100)),aes(n,m),group=1,size=1.1)+
           theme(panel.background = element_rect(fill = "transparent",colour = NA),
                 panel.grid.minor = element_blank(),
                 panel.grid.major = element_blank(),
                 plot.background = element_rect(fill = "transparent",colour = NA),
+                axis.line = element_line(colour=NA),
+                axis.ticks.x = element_line(colour = NA),
                 axis.ticks.y = element_line(colour = NA),
                 axis.title.y = element_text(angle=90,size = 14))
 
         if(input$GC_TF){
           index <- sapply(data$Proability,function(a){sum(a > Interval)})
-          data$col <- Color[index+1]
-          ucol <- unique(data$col)
-          names(ucol) <- ucol
-          lab <- Label[index+1]
-          lab <- unique(lab)
-          lab <- lab[order(unique(ucol))]
-          g <<- g + geom_bar(data=data,aes(x = IndexXxXxX,weight=Proability,fill=col))+
-            scale_fill_manual(NULL,values=ucol,label = lab)+
-            theme(legend.position = c(input$RLegend_x/100,input$RLegend_y/100))
+          data$col <- Label[index+1]
+
+          g <<- ggplot(data=data)+
+            geom_bar(aes(x=IndexXxXxX,weight=Proability,fill=col))+
+            geom_text(aes(x=IndexXxXxX,y=Proability+4,label=Proability))+
+            geom_text(data = data2,aes(x = lx,y = ly,label=lab))+
+            scale_fill_manual(NULL,values=Color,limits = Label)+
+            geom_hline(aes(yintercept=0))+
+            geom_line(data=data.frame(n=c(0,0),m=c(0,100)),aes(n,m),group=1,size=1.1)+
+            scale_x_discrete(NULL,breaks=NULL)+
+            scale_y_continuous("Predict  Probability(%)",expand=c(0,0),lim=c(nc*-5,105),breaks=c(1:nc*-4,seq(20,100,20)),
+                               labels=c(colnames(data)[1:nc],seq(20,100,20)))+
+            theme(panel.background = element_rect(fill = "transparent",colour = NA),
+                  panel.grid.minor = element_blank(),
+                  panel.grid.major = element_blank(),
+                  plot.background = element_rect(fill = "transparent",colour = NA),
+                  axis.text.x = element_text(size=10),
+                  axis.ticks.x = element_line(colour = NA),
+                  axis.ticks.y = element_line(colour = NA),
+                  axis.title.y = element_text(angle=90,size = 14),
+                  legend.position = c(input$RLegend_x/100,input$RLegend_y/100),
+                  legend.text = element_text(size=input$RLegend_TextSize))
 
           if(input$GC_Label== 'NULL') g <<- g + theme(legend.position='none')
         }
