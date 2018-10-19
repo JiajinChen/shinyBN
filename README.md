@@ -8,7 +8,8 @@ ___
 
 Install dependencies:
 ```{r,eval = FALSE}
-
+install.packages("devtools")
+# 
 ```
 
 Install shinyBN from Github:
