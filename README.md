@@ -16,7 +16,6 @@ install.packages(c("ggplot2","shiny","sqldf","xlsx","reshape2","shinydashboard",
 
 # Packages on Bioconductor
 source("https://bioconductor.org/biocLite.R")
-biocLite("BiocGenerics","")
 biocLite(c("gRain","Rgraphviz","igraph","SVGAnnotation","AnnotationDbi"))
 
 # Packages on Github
