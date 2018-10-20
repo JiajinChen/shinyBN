@@ -9,16 +9,18 @@ ___
 Install dependencies:
 ```{r,eval = FALSE}
 install.packages("devtools")
+library(devtools)
 
 # Packages on CRAN
 install.packages(c("ggplot2","shiny","sqldf","xlsx","reshape2","shinydashboard","DT","bnlearn","ggsci","shinyjqui","gridSVG","svglite","svgPanZoom"))
 
 # Packages on Bioconductor
 source("https://bioconductor.org/biocLite.R")
+biocLite("BiocGenerics","")
 biocLite(c("gRain","Rgraphviz","igraph","SVGAnnotation","AnnotationDbi"))
 
 # Packages on Github
-
+install_github(c("nik01010/dashboardthemes","duncantl/SVGAnnotation"))
 ```
 
 Install shinyBN from Github:
