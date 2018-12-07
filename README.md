@@ -15,7 +15,7 @@ library(devtools)
 install.packages(c("ggplot2","shiny","sqldf","xlsx","reshape2","shinydashboard","DT","bnlearn","ggsci","shinyjqui","gridSVG","svglite","svgPanZoom"))
 
 # Packages on Bioconductor
-source("https://bioconductor.org/biocLite.R")
+source("http://bioconductor.org/biocLite.R")
 biocLite(c("gRain","Rgraphviz","igraph","SVGAnnotation","AnnotationDbi"))
 
 # Packages on Github
