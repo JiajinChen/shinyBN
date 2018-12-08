@@ -19,7 +19,7 @@ source("http://bioconductor.org/biocLite.R")
 biocLite(c("gRain","Rgraphviz","igraph","AnnotationDbi"))
 
 # Packages on Github
-install_github(c("nik01010/dashboardthemes","duncantl/SVGAnnotation"))
+install_github(c("nik01010/dashboardthemes","duncantl/SVGAnnotation","woobe/rPlotter"))
 ```
 
 Install shinyBN from Github:
