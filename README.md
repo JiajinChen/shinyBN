@@ -12,14 +12,14 @@ install.packages("devtools")
 library(devtools)
 
 # Packages on CRAN
-install.packages(c("ggplot2","shiny","sqldf","xlsx","reshape2","shinydashboard","DT","bnlearn","ggsci","shinyjqui","gridSVG","svglite","svgPanZoom"))
+install.packages(c("ggplot2","shiny","sqldf","xlsx","reshape2","shinydashboard","DT","bnlearn","ggsci","shinyjqui","shinydashboardPlus","visNetwork"))
 
 # Packages on Bioconductor
 source("http://bioconductor.org/biocLite.R")
-biocLite(c("gRain","Rgraphviz","igraph","AnnotationDbi"))
+biocLite(c("gRain","igraph","AnnotationDbi"))
 
 # Packages on Github
-install_github(c("nik01010/dashboardthemes","duncantl/SVGAnnotation","woobe/rPlotter"))
+install_github("woobe/rPlotter")
 ```
 
 Install shinyBN from Github:
