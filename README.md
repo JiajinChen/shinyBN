@@ -12,7 +12,7 @@ install.packages("devtools")
 library(devtools)
 
 # Packages on CRAN
-install.packages(c("ggplot2","shiny","sqldf","xlsx","reshape2","shinydashboard","DT","bnlearn","ggsci","shinyjqui","shinydashboardPlus","visNetwork"))
+install.packages(c("ggplot2","shiny","sqldf","xlsx","reshape2","shinydashboard","DT","bnlearn","ggsci","shinyjqui","shinydashboardPlus","visNetwork","knitr"))
 
 # Packages on Bioconductor
 source("http://bioconductor.org/biocLite.R")
