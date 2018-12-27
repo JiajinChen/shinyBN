@@ -63,6 +63,7 @@ Once your BN is inputed, the plot would present automatically with default param
   <img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Render.png?raw=true"/>
   
   + An Example:
+  
   ![grab-landing-page](https://github.com/JiajinChen/shinyBN/blob/master/inst/GIF/Render.gif?v=9ad8eed7)
   
 ### **Step 3: Inference!**
@@ -73,7 +74,8 @@ One of the major functions of Bayesian network is outcome prediction. You can qu
   <img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Inference.png?raw=true"/>
   
   + An Example:
-  ![grab-landing-page](https://github.com/JiajinChen/shinyBN/blob/master/inst/GIF/Inference1280.gif?v=9ad8eed7)
+  
+  ![grab-landing-page](https://github.com/JiajinChen/shinyBN/blob/master/inst/GIF/Inference.gif?v=9ad8eed7)
 
 # Reference
 shinyBN: An R/Shiny application for interactive inference and visualization of Bayesian network
