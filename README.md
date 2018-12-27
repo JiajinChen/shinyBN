@@ -1,6 +1,6 @@
 # Introduction
 ___
-shinyBN is an `R/Shiny` application for interactive construction, inference and visualization of Bayesian Network, which provide friendly GUI for users lacking of programming skills. It's based on `bnlearn` (A core R package for construction and inference of Bayesian Network) and visNetwork  (An R package commonly used for network visualization), and wrapped by `Shiny`, a framework to build interactive web apps straight from R. 
+*shinyBN* is an `R/Shiny` application for interactive construction, inference and visualization of Bayesian Network, which provide friendly GUI for users lacking of programming skills. It's based on `bnlearn` (A core R package for construction and inference of Bayesian Network) and visNetwork  (An R package commonly used for network visualization), and wrapped by `Shiny`, a framework to build interactive web apps straight from R. 
 
 # Get Start
 ___
@@ -22,7 +22,7 @@ biocLite(c("gRain","igraph","AnnotationDbi"))
 install_github("woobe/rPlotter")
 ```
 
-Install shinyBN from Github:
+Install *shinyBN* from Github:
 ```{r,eval = FALSE}
 devtools::install_github('JiajinChen/shinyBN')
 ```
@@ -80,7 +80,7 @@ Assay link!
 
 # Source code
 
-shinyBN is an open source project, and the source code and its manual is freely available at https://github.com/JiajinChen/shinyBN.
+*shinyBN* is an open source project, and the source code and its manual is freely available at https://github.com/JiajinChen/shinyBN.
 
 # Contact us
 
