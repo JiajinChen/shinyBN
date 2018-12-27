@@ -63,7 +63,7 @@ Once your BN is inputed, the plot would present automatically with default param
   <img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Render.png?raw=true"/>
   
   + An Example:
-  ![grab-landing-page](https://github.com/JiajinChen/shinyBN/blob/master/inst/GIF/Render1280.gif?v=9ad8eed7)
+  ![grab-landing-page](https://github.com/JiajinChen/shinyBN/blob/master/inst/GIF/Render.gif?v=9ad8eed7)
   
 ### **Step 3: Inference!**
 
