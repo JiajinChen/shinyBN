@@ -57,7 +57,7 @@ Here, we provide Four type of data input:
    
 ### **Step 2: Render your Network!**
 
-Once your BN is inputed, the plot would present automatically with default parameters. If you are not satisfied with your graphic appearance or you want to highlight which nodes or edges. We provide tackles for you to render the plot in your style. We provide nodes color, nodes shape, nodes size, label size for nodes. As for edges, you can choose your favoriate line width, line color, line type. As for line width, we provide two different method: Self-defined and Arc strength, users can render line width corresponding to the strength of the probabilistic relationships. In addition, you're allowed to add legend to index the feature of plot. For instance, you might want to index the baseline nodes and the outcome nodes. High-quality images in PDF output interface also offered by shinyBN.
+Once your BN is inputed, the plot would present automatically with default parameters. If you are not satisfied with your graphic appearance or you want to highlight which nodes or edges, you can render your plot with corresponding settings. Additionally， network layout and legend can be set flexibly. Finally, *shinyBN* provides high-quality images download in HTML output and Network information in Excel.
 
 
   <img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Render.png?raw=true"/>
