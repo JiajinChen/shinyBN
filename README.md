@@ -53,7 +53,7 @@ For web platform users, you can choose a csv-format **discretized** row data or 
 
 For R platform users, besides that, you can also directly input an R object existing in your R environment.
 
-  <img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Input%20Page.png?raw=true"/>
+  <img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Input.png?raw=true"/>
    
 #### **Step 2: Render your Network!**
 
