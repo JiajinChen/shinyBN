@@ -48,10 +48,10 @@ ___
 ### **Step 1: Input your row data/ R object!**
 
 Here, we provide Four type of data input:
-+ **R Object in R :** If you trigger shinyBN in R, you can directly upload R object exist in R environment.
-+ **R Object(.Rdata) :**
-+ **Raw Data(.csv) :**
-+ **Structure in Excel :**
++ **R Object in R :** If you trigger *shinyBN* in R, you can directly upload your Network exist in R environment.
++ **R Object(.Rdata) :** Upload your Network that save as rdata format
++ **Raw Data(.csv) :** Upload raw data and perform structure learning, parameter training in *shinyBN*
++ **Structure in Excel :** Upload a Excel with Network information(see below) :
 
   <img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Input.png?raw=true"/>
    
