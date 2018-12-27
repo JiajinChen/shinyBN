@@ -1,0 +1,8 @@
+###  ***shinyBN*** is an R/Shiny application for interactive inference and visualization of Bayesian network.
+
+#### It's based on two R packages:
+> + [`bnlearn`](http://www.bnlearn.com/):  Structure learning, parameter training and network inference
+> + [`visNetwork`](http://datastorm-open.github.io/visNetwork/):  Network visualization
+
+#### Which is further wrapped by [`R/Shiny`]('http://shiny.rstudio.com/'). It's friendly to users and can easily use through the following workflow :
+
