@@ -67,7 +67,7 @@ Once your BN is inputed, the plot would present automatically with default param
   
 ### **Step 3: Inference!**
 
-Once your BN is inputed, you can query the probability of some nodes given the values of a set of instantiated nodes. shinyBN allowed users to set multiple instantiated nodes and both marginal probability and joint probability are supported. You can choose table or graph to display the result, user-defined color grade and legend are supported for graph. In addition, you can download the result through a PDF output interface for High-quality images.
+One of the major functions of Bayesian network is outcome prediction. You can query the probability of interested nodes given the values of a set of instantiated nodes. *shinyBN* allowed users to set multiple instantiated nodes and both marginal probability and joint probability are supported, the prediction results will be displayed in bar plot or probabilistic table. Users can set different color representing different threshold to distinguish different levels of outcome probability. In addition, you can download the result through a PDF output interface for High-quality images.
 
 
   <img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Inference.png?raw=true"/>
