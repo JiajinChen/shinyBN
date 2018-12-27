@@ -53,17 +53,14 @@ For web platform users, you can choose a csv-format **discretized** row data or 
 
 For R platform users, besides that, you can also directly input an R object existing in your R environment.
 
-  <img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Step%201.png?raw=true"/>
+  <img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Input%20Page.png?raw=true"/>
    
 #### **Step 2: Render your Network!**
 
 Once your BN is inputed, the plot would present automatically with default parameters. If you are not satisfied with your graphic appearance or you want to highlight which nodes or edges. We provide tackles for you to render the plot in your style. We provide nodes color, nodes shape, nodes size, label size for nodes. As for edges, you can choose your favoriate line width, line color, line type. As for line width, we provide two different method: Self-defined and Arc strength, users can render line width corresponding to the strength of the probabilistic relationships. In addition, you're allowed to add legend to index the feature of plot. For instance, you might want to index the baseline nodes and the outcome nodes. High-quality images in PDF output interface also offered by shinyBN.
 
-  + Nodes:
-  <img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Node%20Render.png?raw=true"/>
-  
-  + Edges:
-  <img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Edge%20Render.png?raw=true"/>
+
+  <img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Render.png?raw=true"/>
   
   + An Example:
   ![grab-landing-page](https://github.com/JiajinChen/shinyBN/blob/master/inst/GIF/Render1280.gif?v=9ad8eed7)
