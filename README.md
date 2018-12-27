@@ -47,11 +47,11 @@ ___
 ___
 #### **Step 1: Input your row data/ R object!**
 
-Here, we provide three type of data input:
-
-For web platform users, you can choose a csv-format **discretized** row data or an R object save as Rdata. 
-
-For R platform users, besides that, you can also directly input an R object existing in your R environment.
+Here, we provide Four type of data input:
++ R Object in R : If you trigger shinyBN in R, you can directly upload R object exist in R environment.
++ 
++ 
++ 
 
   <img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Input.png?raw=true"/>
    
