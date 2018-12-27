@@ -75,6 +75,9 @@ One of the major functions of Bayesian network is outcome prediction. You can qu
   + An Example:
   ![grab-landing-page](https://github.com/JiajinChen/shinyBN/blob/master/inst/GIF/Inference1280.gif?v=9ad8eed7)
 
+# Reference
+Assay link!
+
 # Source code
 
 shinyBN is an open source project, and the source code and its manual is freely available at https://github.com/JiajinChen/shinyBN.
