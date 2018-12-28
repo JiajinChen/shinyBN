@@ -51,7 +51,7 @@ Here, we provide Four type of data input:
 + **R Object in R :** If you trigger *shinyBN* in R, you can directly upload your Network exist in R environment.
 + **R Object(.Rdata) :** Upload your Network that save as rdata format.
 + **Raw Data(.csv) :** Upload raw data and perform structure learning, parameter training in *shinyBN*.
-+ **Structure in Excel :** Upload a Excel with Network information (see Example).
++ **Structure in Excel :** Upload a Excel with Network information (see [Example](https://github.com/JiajinChen/shinyBN/blob/master/inst/shinyApp/data/shinyBN.xlsx)).
 
   <img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Input.png?raw=true"/>
    
