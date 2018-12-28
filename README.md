@@ -45,7 +45,7 @@ ___
 
 # How to use
 ___
-### **Step 1: Input your row data/ R object!**
+### **Step 1: Input your Network!**
 
 Here, we provide Four type of data input:
 + **R Object in R :** If you trigger *shinyBN* in R, you can directly upload your Network exist in R environment.
