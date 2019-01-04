@@ -16,7 +16,7 @@ install.packages(c("ggplot2","shiny","sqldf","xlsx","reshape2","shinydashboard",
 
 # Packages on Bioconductor
 source("http://bioconductor.org/biocLite.R")
-biocLite(c("gRain","igraph","AnnotationDbi"))
+biocLite(c("gRain","igraph","AnnotationDbi","EBImage"))
 
 # Packages on Github
 install_github("woobe/rPlotter")
