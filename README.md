@@ -19,7 +19,7 @@ source("http://bioconductor.org/biocLite.R")
 biocLite(c("gRain","igraph","AnnotationDbi","EBImage"))
 
 # Packages on Github
-install_github("woobe/rPlotter")
+install_github(c("ramnathv/rblocks","woobe/rPlotter"))
 ```
 
 Install *shinyBN* from Github:
