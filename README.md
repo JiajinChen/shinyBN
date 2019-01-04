@@ -1,6 +1,6 @@
 # Introduction
 ___
-*shinyBN* is an `R/Shiny` application for interactive construction, inference and visualization of Bayesian Network, which provide friendly GUI for users lacking of programming skills. It's based on `bnlearn` (A core R package for structure learning, parameter training of Bayesian Network, R package version 4.4), gRain (An R packages for network inference, R package version 1.3-0) and `visNetwork`  (An R package commonly used for network visualization, R package version 2.0.5), and wrapped by `Shiny`, a framework to build interactive web apps straight from R. 
+*shinyBN* is an `R/Shiny` application for interactive construction, inference and visualization of Bayesian Network, which provide friendly GUI for users lacking of programming skills. It's based on `bnlearn` (A core R package for structure learning, parameter training of Bayesian Network, R package version 4.4), `gRain` (An R packages for network inference, R package version 1.3-0) and `visNetwork`  (An R package commonly used for network visualization, R package version 2.0.5), and wrapped by `Shiny`, a framework to build interactive web apps straight from R. 
 
 # Get Start
 ___
