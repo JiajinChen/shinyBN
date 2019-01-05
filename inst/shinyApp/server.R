@@ -1,6 +1,6 @@
 options(warn=-1)
 # change the maximum size restriction
-options(shiny.maxRequestSize=50*1024^2)
+options(shiny.maxRequestSize=100*1024^2)
 
 #SERVER
 shinyServer(function(input,output,session){
@@ -190,8 +190,8 @@ shinyServer(function(input,output,session){
     if(! is.null(in_file)){
       n_char <- nchar(in_file$name)
       if(substr(in_file$name,n_char-2,n_char) == "xls" | substr(in_file$name,n_char-3,n_char) == "xlsx"){
-        Node <- read.xlsx2(in_file$datapath, header = T,sheetName = "Nodes",stringsAsFactors=F)
-        Edge <- read.xlsx2(in_file$datapath, header = T,sheetName = "Edges",stringsAsFactors=F)
+        Node <- read_excel(in_file$datapath,sheet = "Nodes")
+        Edge <- read_excel(in_file$datapath,sheet = "Edges")
         if(! is.null(Node) & ! is.null(Edge)){
           Continue <- list(Node=Node,Edge=Edge)
         }
@@ -1038,9 +1038,8 @@ shinyServer(function(input,output,session){
   output$shinyBN.xlsx <- downloadHandler(
     filename = "shinyBN.xlsx",
     content = function(file){
-      write.xlsx2(recStruct()[["node"]],file,row.names = F,sheetName="Nodes")
-      write.xlsx2(recStruct()[["edge"]],file,row.names = F,sheetName="Edges",append = T)
-    }
+      write_xlsx(list(Nodes=recStruct()[["node"]],Edges=recStruct()[["edge"]]),path=file,format_headers = F)
+    }, contentType = 'application/vnd.ms-excel'
   )
   
   # Set evidence & Query!
