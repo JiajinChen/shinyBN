@@ -1,6 +1,6 @@
 # Introduction
 ___
-*shinyBN* is an `R/Shiny` application for interactive construction, inference and visualization of Bayesian Network, which provide friendly GUI for users lacking of programming skills. It's based on `bnlearn` (A core R package for structure learning, parameter training of Bayesian Network, R package version 4.4), `gRain` (An R packages for network inference, R package version 1.3-0) and `visNetwork`  (An R package commonly used for network visualization, R package version 2.0.5), and wrapped by `Shiny`, a framework to build interactive web apps straight from R. 
+*shinyBN* is an `R/Shiny` application for interactive construction, inference and visualization of Bayesian Network, which provide friendly GUI for users lacking of programming skills. It's mainly based on five R packages: `bnlearn` (R package version 4.4) for structure learning, parameter training, `gRain` (R package version 1.3-0) for network inference, and `visNetwork` (R package version 2.0.5) for network visualization, `pROC` (R package version 1.13.0) and `rmda` (R package version 1.6) for receiver operating characteristic (ROC) curve and decision curves analysis (DCA) , respectively, which was further wrapped by `Shiny` (R package version 1.2.0), a framework to build interactive web application straight by R.
 
 # Get Start
 ___
@@ -12,7 +12,7 @@ install.packages("devtools")
 library(devtools)
 
 # Packages on CRAN
-install.packages(c("ggplot2","shiny","sqldf","xlsx","reshape2","shinydashboard","DT","bnlearn","ggsci","shinyjqui","shinydashboardPlus","visNetwork","knitr"))
+install.packages(c("shiny","shinydashboard","shinydashboardPlus","sqldf","writexl","readxl","reshape2","DT","bnlearn","ggsci","shinyjqui","ggplot2","visNetwork","pROC","rmda","knitr"))
 
 # Packages on Bioconductor
 source("http://bioconductor.org/biocLite.R")
@@ -48,6 +48,7 @@ ___
 ### **Step 1: Input your Network!**
 
 Here, we provide Four type of data input:
+
 + **R Object in R :** If you trigger *shinyBN* in R, you can directly upload your Network exist in R environment.
 + **R Object(.Rdata) :** Upload your Network that save as rdata format.
 + **Raw Data(.csv) :** Upload raw data and perform structure learning, parameter training in *shinyBN*.
@@ -57,8 +58,11 @@ Here, we provide Four type of data input:
    
 ### **Step 2: Render your Network!**
 
-Once your BN is inputed, the plot would present automatically with default parameters. If you are not satisfied with your graphic appearance or you want to highlight which nodes or edges, you can render your plot with corresponding settings. Additionally, network layout and legend can be set flexibly. Finally, *shinyBN* provides high-quality images download in HTML output and Network information in Excel.
+Once your BN is inputed, the plot would present automatically with default parameters. If you are not satisfied with your graphic appearance, you can render your plot with corresponding settings. Additionally, network layout and legend can be set flexibly. Finally, *shinyBN* provides high-quality images download in HTML output and Network information in Excel.Because the network plot is based on canvas, it's difficult to get SVG. You can get the high-resolution figure by the following step:
 
++ **Step1 :** Download the network in HTML from shinyBN.
++ **Step2 :** Use any text editor to open the HTML formatted file and replace the text '888px' to the pixel you want, such as '5000px'. Save the change.
++ **Step3 :** Open the HTML file with your browser and adjust the network to the maximum. Then right click to view the image. Finally, right click to save the image.
 
   <img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Render.png?raw=true"/>
   
@@ -73,12 +77,18 @@ One of the major functions of Bayesian network is outcome prediction. You can qu
 
   <img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Inference.png?raw=true"/>
   
-  + An Example:
+  + An Example of single prediction:
   
   ![grab-landing-page](https://github.com/JiajinChen/shinyBN/blob/master/inst/GIF/Single%20inference.gif?v=9ad8eed7)
 
+*shinyBN* also allowed user to upload a validation set for batch prediction. If your validation set contains outcome information, you can get the receiver operating characteristic (ROC) curve plot and decision curves analysis (DCA) plot. The same, both the plot in high-resolution images and batch prediction result in tables are supported.
+
+  + An Example of batch prediction:
+  
+  ![grab-landing-page](https://github.com/JiajinChen/shinyBN/blob/master/inst/GIF/Batch%20inference.gif?v=9ad8eed7)
+
 # Reference
-shinyBN: a web server for interactive inference and visualization of Bayesian network
+shinyBN: An online application for Bayesian network interactive inference and visualization
 
 # Source code
 
