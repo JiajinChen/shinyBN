@@ -75,7 +75,7 @@ One of the major functions of Bayesian network is outcome prediction. You can qu
   
   + An Example:
   
-  ![grab-landing-page](https://github.com/JiajinChen/shinyBN/blob/master/inst/GIF/Inference.gif?v=9ad8eed7)
+  ![grab-landing-page](https://github.com/JiajinChen/shinyBN/blob/master/inst/GIF/Single%20inference.gif?v=9ad8eed7)
 
 # Reference
 shinyBN: a web server for interactive inference and visualization of Bayesian network
