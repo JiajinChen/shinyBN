@@ -68,7 +68,7 @@ Once your BN is inputed, the plot would present automatically with default param
   
   + An Example:
   
-  ![grab-landing-page](https://github.com/JiajinChen/shinyBN/blob/master/inst/GIF/Render.gif?v=9ad8eed7)
+  ![grab-landing-page](https://github.com/JiajinChen/Dependence/blob/master/GIF/Render.gif?v=9ad8eed7)
   
 ### **Step 3: Inference!**
 
@@ -79,13 +79,13 @@ One of the major functions of Bayesian network is outcome prediction. You can qu
   
   + An Example of single prediction:
   
-  ![grab-landing-page](https://github.com/JiajinChen/shinyBN/blob/master/inst/GIF/Single%20inference.gif?v=9ad8eed7)
+  ![grab-landing-page](https://github.com/JiajinChen/Dependence/blob/master/GIF/Single%20inference.gif?v=9ad8eed7)
 
 *shinyBN* also allowed user to upload a validation set for batch prediction. If your validation set contains outcome information, you can get the receiver operating characteristic (ROC) curve plot and decision curves analysis (DCA) plot. The same, both the plot in high-resolution images and batch prediction result in tables are supported.
 
   + An Example of batch prediction:
   
-  ![grab-landing-page](https://github.com/JiajinChen/shinyBN/blob/master/inst/GIF/Batch%20inference.gif?v=9ad8eed7)
+  ![grab-landing-page](https://github.com/JiajinChen/Dependence/blob/master/GIF/Batch%20inference.gif?v=9ad8eed7)
 
 # Reference
 shinyBN: An online application for Bayesian network interactive inference and visualization
