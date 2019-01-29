@@ -58,7 +58,7 @@ Here, we provide Four type of data input:
    
 ### **Step 2: Render your Network!**
 
-Once your BN is inputed, the plot would present automatically with default parameters. If you are not satisfied with your graphic appearance, you can render your plot with corresponding settings. Additionally, network layout and legend can be set flexibly. Finally, *shinyBN* provides high-quality images download in HTML output and Network information in Excel.Because the network plot is based on canvas, it's difficult to get SVG. You can get the high-resolution figure by the following step:
+Once your BN is inputed, the plot would present automatically with default parameters. If you are not satisfied with your graphic appearance, you can render your plot with corresponding settings. Additionally, network layout and legend can be set flexibly. Finally, *shinyBN* provides high-quality images download in HTML output and Network information in Excel.Because the network plot is based on canvas, it's difficult to get SVG. You can get the **high-resolution** figure by the following step:
 
 + **Step1 :** Download the network in HTML from shinyBN.
 + **Step2 :** Use any text editor to open the HTML formatted file and replace the text '888px' to the pixel you want, such as '5000px'. Save the change.
