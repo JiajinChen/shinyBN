@@ -1,39 +1,53 @@
 options(warn=-1)
 # change the maximum size restriction
 options(shiny.maxRequestSize=100*1024^2)
+# options(device.ask.default = FALSE)
 
 #SERVER
 shinyServer(function(input,output,session){
   
   # Structure Prior
   RecP <- reactive({
-    file <- input$inFile
-    if(!is.null(file)){
-      data <- read.csv(file$datapath, header = input$inHeader,colClasses = "factor")
-      nodelist = colnames(data)
+    if(input$Prior_Type == "Single"){
+      file <- input$inFile
+      if(!is.null(file)){
+        data <- read.table(file_in$datapath, header = input$inHeader, sep= input$inSep,colClasses = "factor",na.strings = c("NA",""))
+        nodelist = colnames(data)
+      }
+      
+      if(input$AddButtonP == n_AP + 1) {
+        n_AP <<- n_AP + 1
+        if(input$in_From == "All nodes" & input$in_To != "All nodes"){
+          Pri_tab <<- rbind(Pri_tab,data.frame(From=nodelist,To=input$in_To,Type=input$BorW,stringsAsFactors=FALSE))
+        }else if(input$in_From != "All nodes" & input$in_To == "All nodes"){
+          Pri_tab <<- rbind(Pri_tab,data.frame(From=input$in_From,To=nodelist,Type=input$BorW,stringsAsFactors=FALSE))
+        }else if(input$in_From != "All nodes" & input$in_To != "All nodes"){
+          Pri_tab <<- rbind(Pri_tab,data.frame(From=input$in_From,To=input$in_To,Type=input$BorW,stringsAsFactors=FALSE))
+        }
+      }
+      if(input$delButtonP == n_DP + 1) {
+        n_DP <<- n_DP + 1
+        if(input$in_From == "All nodes" & input$in_To != "All nodes"){
+          indexP = which(Pri_tab$To == input$in_To & Pri_tab$Type == input$BorW)
+        }else if(input$in_From != "All nodes" & input$in_To == "All nodes"){
+          indexP = which(Pri_tab$From == input$in_From & Pri_tab$Type == input$BorW)
+        }else if(input$in_From != "All nodes" & input$in_To != "All nodes"){
+          indexP = which(Pri_tab$From == input$in_From & Pri_tab$To == input$in_To & Pri_tab$Type == input$BorW)
+        }
+        if(length(indexP)) Pri_tab <<- Pri_tab[-indexP,]
+      }
+      if(input$ClearButtonP == n_CP + 1){
+        n_CP <<- n_CP + 1
+        Pri_tab <<- data.frame(From=character(),To=character(),Type=character(),stringsAsFactors=FALSE)
+      }
+    }else{
+      file <- input$Pri_Batch
+      if(! is.null(file)){
+        data <- read.table(file$datapath, header = input$PriHeader, sep= input$PriSep,stringsAsFactors=F)
+        if(nrow(data)) Pri_tab <<- data.frame(From=data[,1],To=data[,2],Type=data[,3],stringsAsFactors=FALSE)
+      }
     }
     
-    if(input$AddButtonP == n_AP + 1) {
-      n_AP <<- n_AP + 1
-      if(input$in_From == "All nodes" & input$in_To != "All nodes"){
-        Pri_tab <<- rbind(Pri_tab,data.frame(From=nodelist,To=input$in_To,Type=input$BorW,stringsAsFactors=FALSE))
-      }else if(input$in_From != "All nodes" & input$in_To == "All nodes"){
-        Pri_tab <<- rbind(Pri_tab,data.frame(From=input$in_From,To=nodelist,Type=input$BorW,stringsAsFactors=FALSE))
-      }else if(input$in_From != "All nodes" & input$in_To != "All nodes"){
-        Pri_tab <<- rbind(Pri_tab,data.frame(From=input$in_From,To=input$in_To,Type=input$BorW,stringsAsFactors=FALSE))
-      }
-    }
-    if(input$delButtonP == n_DP + 1) {
-      n_DP <<- n_DP + 1
-      if(input$in_From == "All nodes" & input$in_To != "All nodes"){
-        indexP = which(Pri_tab$To == input$in_To & Pri_tab$Type == input$BorW)
-      }else if(input$in_From != "All nodes" & input$in_To == "All nodes"){
-        indexP = which(Pri_tab$From == input$in_From & Pri_tab$Type == input$BorW)
-      }else if(input$in_From != "All nodes" & input$in_To != "All nodes"){
-        indexP = which(Pri_tab$From == input$in_From & Pri_tab$To == input$in_To & Pri_tab$Type == input$BorW)
-      }
-      if(length(indexP)) Pri_tab <<- Pri_tab[-indexP,]
-    }
     Pri_tab <<- Pri_tab[which(Pri_tab$From != Pri_tab$To),]
     Pri_tab <<- Pri_tab[!duplicated(data.frame(Pri_tab$From,Pri_tab$To,Pri_tab$Type), fromLast=TRUE), ]
     rownames(Pri_tab) <- NULL
@@ -85,8 +99,20 @@ shinyServer(function(input,output,session){
       if(! is.null(file_in)){
         n_char <- nchar(file_in$name)
         if(substr(file_in$name,n_char-2,n_char) == "csv"){
-          data <- read.csv(file_in$datapath, header = input$inHeader,colClasses = "factor")
+          data <- read.table(file_in$datapath, header = input$inHeader, sep= input$inSep,colClasses = "factor",na.strings = c("NA",""))
+          
           if(! is.null(data)){
+            
+            if(input$YNsplit=="yes"){
+              if(input$Split_Proportion == "7:3") proportion <- 0.7
+              else if(input$Split_Proportion == "6:4") proportion <- 0.6
+              else if(input$Split_Proportion == "5:5") proportion <- 0.5
+              else if(input$Split_Proportion == "8:2") proportion <- 0.8
+              else proportion <- 0.9
+              set.seed(666)
+              index <- sample(1:nrow(data),replace = FALSE,size=proportion*nrow(data))
+              data <- data[index,]
+            }
             
             # Prior information
             if(input$GoButtonP == n_GP + 1){
@@ -126,9 +152,22 @@ shinyServer(function(input,output,session){
                 boot = boot.strength(data=data,R = as.numeric(input$N_Boot),algorithm = input$inLearn4,
                                      algorithm.args = list(score=input$inScore4,blacklist = black,whitelist = white))
               }
-              boot[(boot$strength > 0.85) & (boot$direction >=0.5),]
-              dag = averaged.network(boot,threshold = 0.85)
+              boot[(boot$strength > input$Strength_Boot) & (boot$direction >=0.5),]
+              dag = averaged.network(boot,threshold = input$Strength_Boot)
             }
+            if(input$inLearnType == 'Bootstrap') time <- 120
+            else time <- 20
+            progress <- Progress$new(session, min=1, max=time)
+            on.exit(progress$close())
+            
+            progress$set(message = 'Calculation in progress',
+                         detail = 'This may take a while...')
+            
+            for (i in 1:time) {
+              progress$set(value = i)
+              Sys.sleep(0.5)
+            }
+            
             if(nrow(undirected.arcs(dag))) vals$Input_ERROR <- 5
             bn_fit <- try(bn.fit(dag,data,method = input$inMethod))
             if(! "bn.fit" %in% class(bn_fit)) bn_fit <- NULL
@@ -143,6 +182,7 @@ shinyServer(function(input,output,session){
   #Read the data to compute edges strength
   recStrength <- reactive({
     bn_Strength <- NULL
+    bn_data <- NULL
     if(input$inType=='R Object in R'){
       if(!is.null(input$inFit)){
         inS <- unlist(strsplit(input$inFit,",",fixed=T))[1]
@@ -162,24 +202,27 @@ shinyServer(function(input,output,session){
     else if(input$inType=='Raw Data(.csv)'){
       file <- input$inFile
       if(! is.null(file)){
-        bn_data <- read.csv(file$datapath, header = input$inHeader,colClasses = "factor")
+        bn_data <- read.table(file$datapath, header = input$inHeader, sep= input$inSep,colClasses = "factor",na.strings = c("NA",""))
       }
     }
-    if(is.data.frame(bn_data)){
-      fit <- recFit()
-      if(! is.null(fit)){
-        if("bn.fit" %in% class(fit)) x <- bn.net(fit)
-        else x <- fit
-      } 
-      if(input$IE_Criterion == 'Independence Test'){
-        bn_Strength <- arc.strength(x,bn_data,criterion=input$IE_Independence)
-        if(! "bn.strength" %in% class(bn_Strength)) bn_Strength <- NULL
-        else bn_Strength$strength <- bn_Strength$strength*-1
-      }else{
-        bn_Strength <- arc.strength(x,bn_data,criterion=input$IE_Score)
-        if(! "bn.strength" %in% class(bn_Strength)) bn_Strength <- NULL
+    if(! is.null(bn_data)){
+      if(is.data.frame(bn_data)){
+        fit <- recFit()
+        if(! is.null(fit)){
+          if("bn.fit" %in% class(fit)) x <- bn.net(fit)
+          else x <- fit
+        } 
+        if(input$IE_Criterion == 'Independence Test'){
+          bn_Strength <- arc.strength(x,bn_data,criterion=input$IE_Independence)
+          if(! "bn.strength" %in% class(bn_Strength)) bn_Strength <- NULL
+          else bn_Strength$strength <- bn_Strength$strength*-1
+        }else{
+          bn_Strength <- arc.strength(x,bn_data,criterion=input$IE_Score)
+          if(! "bn.strength" %in% class(bn_Strength)) bn_Strength <- NULL
+        }
       }
     }
+    
     bn_Strength
   })
   
@@ -239,8 +282,76 @@ shinyServer(function(input,output,session){
       out_text <<- paste0(out_text,"\tError: Please input a Excel.\n")
       vals$Input_ERROR <- 0
     }
+    if(vals$Input_ERROR == 5) {
+      out_text <<- paste0(out_text,"\tError: The graph is only partially directed..\n")
+      vals$Input_ERROR <- 0
+    }
     out_text
   })
+  
+  output$valid_ERROR <- renderText({
+    if(input$ClearLogv == n_LogCleav + 1){
+      n_LogCleav <<- n_LogCleav + 1
+      out_textV <<- "Log:\n"
+    }
+    if(vals$Valid_Warning == 1){
+      Valid_Set <- Rec_Valid()
+      in_outcome <- Valid_Set[,input$ValidVar]
+      n_na = sum(is.na(in_outcome))
+      out_textV <<- paste0(out_textV," Warning: ",n_na," observations were deleted due to missing outcome when compute index.\n")
+      vals$Valid_Warning <- 0
+    }
+    if(vals$Valid_ERROR == 0.1) {
+      out_textV <<- paste0(out_textV," ERROR: The Node couldn't be both evidence node and query ndoe at the same time.\n\tIt would be deleted in query node set.\n")
+      vals$Valid_ERROR <- 0
+    }
+    if(vals$Valid_ERROR == 1) {
+      out_textV <<- paste0(out_textV," Error: Please input a 'csv' format file.\n")
+      vals$Valid_ERROR <- 0
+    }
+    if(vals$Valid_ERROR == 2) {
+      file_valid <- input$ValidSet
+      if(! is.null(file_valid)){
+        n_char <- nchar(file_valid$name)
+        if(substr(file_valid$name,n_char-2,n_char) == "csv"){
+          valid_data <- read.table(file_valid$datapath, header = input$ValidHeader, sep= input$ValidSep,colClasses = "factor")
+        }
+      }
+      VAR <- colnames(valid_data)[Check_result1==F]
+      out_textV <<- paste0(out_textV," Error: Variables '",paste(VAR,collapse = ", "),"' is not in Network.\n")
+      vals$Valid_ERROR <- 0
+    }
+    if(vals$Valid_ERROR == 3) {
+      file_valid <- input$ValidSet
+      if(! is.null(file_valid)){
+        n_char <- nchar(file_valid$name)
+        if(substr(file_valid$name,n_char-2,n_char) == "csv"){
+          valid_data <- read.table(file_valid$datapath, header = input$ValidHeader, sep= input$ValidSep,colClasses = "factor")
+        }
+      }
+      VAR <- colnames(valid_data)[Check_result2==F]
+      out_textV <<- paste0(out_textV," Error: The value of '",paste(VAR,collapse = ", "),"' is not corresponding to Network.\n")
+      vals$Valid_ERROR <- 0
+    }
+    if(vals$Valid_ERROR == 4) {            
+      out_textV <<- paste0(out_textV," Error: The selected outcome '",input$ValidVar,"' is not in the Validation Set, the ROC, DCA and other index are not supported.\n")
+      vals$Valid_ERROR <- 0
+    }
+    
+    out_textV
+  })
+
+  output$Render_ERROR <- renderText({
+    if(input$ClearLogRender == n_LogCleaRender + 1){
+      n_LogCleaRender <<- n_LogCleaRender + 1
+      out_textR <<- "Log:\n"
+    }
+    if((input$inType == 'R Object in R' & input$inFit == 'Stroke_bnfit') | input$inType == 'Structure in Excel'){
+      if(nchar(out_textR) < 50 ) out_textR <<- paste0(out_textR," Note: Layout and quickly setting for all nodes/edges can only work without information of node position. The 'Stroke' network is not support.")
+    }
+    out_textR
+  })
+    
   #Reactive UI output
   output$evidence <- renderUI({
     fit <- recFit()
@@ -285,7 +396,7 @@ shinyServer(function(input,output,session){
   output$from <- renderUI({
     file <- input$inFile
     if(! is.null(file)){
-      data <- read.csv(file$datapath, header = input$inHeader,colClasses = "factor")
+      data <- read.table(file$datapath, header = input$inHeader, sep= input$inSep,colClasses = "factor",na.strings = c("NA",""))
       Nodelist = c("All nodes",colnames(data))
       selectInput("in_From","From:",Nodelist)
     }
@@ -294,7 +405,7 @@ shinyServer(function(input,output,session){
   output$to <- renderUI({
     file <- input$inFile
     if(! is.null(file)){
-      data <- read.csv(file$datapath, header = input$inHeader,colClasses = "factor")
+      data <- read.table(file$datapath, header = input$inHeader, sep= input$inSep,colClasses = "factor",na.strings = c("NA",""))
       Nodelist = c("All nodes",colnames(data))
       selectInput("in_To","To:",Nodelist)
     }
@@ -360,6 +471,23 @@ shinyServer(function(input,output,session){
     if(input$IE_size_type == 'Arc Strength') Renderlist <- c("Edge Color","Edge Type")
     else Renderlist <- c("Edge Color","Edge Type","Edge Width")
     selectInput("Edges_type","Select the Type:",Renderlist)
+  })
+  
+  output$ValidVarUI <- renderUI({
+    fit <- recFit()
+    if(! is.null(fit) & "bn.fit" %in% class(fit)){
+      varlist <- nodes(fit)
+      selectInput("ValidVar","Select the Outcome:",varlist)
+    }
+  })
+  
+  output$ValidValueUI <- renderUI({
+    fit <- recFit()
+    if(! is.null(fit) & ! is.null(input$ValidVar) & "bn.fit" %in% class(fit)){
+      tmp = fit[[input$ValidVar]]
+      valuelist = rownames(tmp$prob)
+      selectInput("ValidValue","Select the value represented incident:",valuelist)
+    }
   })
   
   recSci_Pic <- reactive({
@@ -486,7 +614,7 @@ shinyServer(function(input,output,session){
     if(input$shinyBN_choose == n_NetDownload + 2) n_NetDownload <<- n_NetDownload +2
     if(input$shinyBN_choose > n_NetDownload)
       box(width=12,
-          downloadLink("shinyBN.html","Figure in HTML"),
+          downloadLink("shinyBN_Network.html","Figure in HTML"),
           downloadLink("shinyBN.xlsx","Structure in Excel"))
   })
   
@@ -622,7 +750,7 @@ shinyServer(function(input,output,session){
     if(! is.null(fit) | ! is.null(Cont)){
       if(! is.null(fit)){
         if(input$inType == 'R Object in R' & input$inFit == "Stroke_bnfit"){
-          Node_Excel <- read.xlsx2("data/shinyBN.xlsx", header = T,sheetName = "Nodes",stringsAsFactors=F)
+          Node_Excel <- read_excel("data/shinyBN.xlsx",sheet = "Nodes")
           nodes <- Node_Excel$id
           Ncol <- Node_Excel$color
           Nshape <- Node_Excel$shape
@@ -685,7 +813,7 @@ shinyServer(function(input,output,session){
       if(! is.null(fit)){
         if(! is.null(fit)){
           if(input$inType == 'R Object in R' & input$inFit == "Stroke_bnfit"){
-            Edge_Excel <- read.xlsx2("data/shinyBN.xlsx", header = T,sheetName = "Edges",stringsAsFactors=F)
+            Edge_Excel <- read_excel("data/shinyBN.xlsx",sheet = "Edges")
             edges <- paste(Edge_Excel$from,"~",Edge_Excel$to,sep = '')
             Ecol <- Edge_Excel$color
             Elty <- Edge_Excel$linetype
@@ -700,8 +828,12 @@ shinyServer(function(input,output,session){
             Elty <- rep(input$IE_type,length(edges))
             if(input$IE_size_type == "Self-defined") Elwd <- rep(input$IE_size,length(edges))
             else{
-              a <- recStrength()$strength
-              Elwd <- 5*(a-min(a))/(max(a)-min(a))+1
+              if(! is.null(recStrength())){
+                vals$Input_ERROR <- 5 
+                a <- recStrength()$strength
+                Elwd <- 5*(a-min(a))/(max(a)-min(a))+1
+              }
+              else Elwd <- rep(1,length(edges))
             }
           }
         }
@@ -820,8 +952,8 @@ shinyServer(function(input,output,session){
     if(! is.null(fit) | ! is.null(Cont)){
       if(! is.null(fit)){
         if(input$inType == 'R Object in R' & input$inFit == "Stroke_bnfit"){
-          Node_Excel <- read.xlsx2("data/shinyBN.xlsx", header = T,sheetName = "Nodes",stringsAsFactors=F)
-          Edge_Excel <- read.xlsx2("data/shinyBN.xlsx", header = T,sheetName = "Edges",stringsAsFactors=F)
+          Node_Excel <- read_excel("data/shinyBN.xlsx",sheet = "Nodes")
+          Edge_Excel <- read_excel("data/shinyBN.xlsx",sheet = "Edges")
           nodes <- Node_Excel$id
           edges <- data.frame(from=Edge_Excel$from,to=Edge_Excel$to)
           label <- Node_Excel$label
@@ -947,7 +1079,7 @@ shinyServer(function(input,output,session){
     }
   })
   
-  vals <- reactiveValues(coords=NULL,Input_ERROR=0)
+  vals <- reactiveValues(coords=NULL,Input_ERROR=0,Valid_ERROR = 0,Valid_Warning=0)
   observe({
     invalidateLater(1000)
     visNetworkProxy("outVis") %>% visGetPositions()
@@ -1004,10 +1136,9 @@ shinyServer(function(input,output,session){
   })
   
   # Network Download(Graph in PDF)
-  output$shinyBN.html <- downloadHandler(
-    filename = "shinyBN.html",
+  output$shinyBN_Network.html <- downloadHandler(
+    filename = "shinyBN_Network.html",
     content = function(file){
-      
       node_Legend <- RecNL()
       if(nrow(node_Legend)) node_Legend <- data.frame(node_Legend,font.size=input$NLegend_KeySize)
       edge_Legend <- RecEL()
@@ -1023,12 +1154,13 @@ shinyServer(function(input,output,session){
         position <- input$ELegend_posion
       }else position <- input$NLegend_posion
       
-      visNetwork(nodes = recStruct()[["node"]], edges = recStruct()[["edge"]], height = "800px") %>%
+      visNetwork(nodes = recStruct()[["node"]], edges = recStruct()[["edge"]], height = "888px", width = "888px") %>%
         visPhysics(enabled = FALSE)%>%
         visEdges(smooth = F)%>%
         visLegend(addEdges = edge_Legend,addNodes = node_Legend,width=0.1,
                   position=position,useGroups=F,zoom=F)%>%
-        visExport(type = "pdf",label = paste0("Export as PDF")) %>%
+        visOptions(autoResize=T)%>%
+        visExport(type = "pdf",label = paste0("Export as PDF"),loadDependencies=T) %>%
         visSave(file)
       
     }, contentType = 'text/html'
@@ -1072,7 +1204,7 @@ shinyServer(function(input,output,session){
   
   RecQ <- reactive({
     fit <- recFit()
-    if(input$delButtonQ == 0 & input$delButtonQ == 0 & input$ClearButtonQ == 0 & !is.null(fit) & "bn.fit" %in% class(fit)) {
+    if(input$AddButtonQ == 0 & input$delButtonQ == 0 & input$ClearButtonQ == 0 & !is.null(fit) & "bn.fit" %in% class(fit)) {
       if(input$inType == 'R Object in R' & input$inFit == "Stroke_bnfit") node = "STROKE"
       else if(input$inFit %in% c("Asia_fit,Asia_data","Asia_fit")) node = "lung"
       else node <- nodes(fit)[length(fit)]
@@ -1094,6 +1226,14 @@ shinyServer(function(input,output,session){
     if(input$ClearButtonQ == n_ClearQue + 1){
       n_ClearQue <<- n_ClearQue + 1
       Query_tab <<- data.frame(Query=character(),Value = character(),stringsAsFactors=FALSE)
+    }
+    if(nrow(RecE()) & nrow(Query_tab)){
+      Evinode <- RecE()$Evidence
+      if(any(Evinode==Query_tab$Query)) {
+        var <- Evinode[which(Evinode %in% Query_tab$Query)]
+        vals$Valid_ERROR <- 0.1
+        Query_tab <<- Query_tab[! Query_tab$Query %in% var,]
+      }
     }
     rownames(Query_tab) <- NULL
     Query_tab
@@ -1129,41 +1269,26 @@ shinyServer(function(input,output,session){
   
   # Query results in graph
   output$ResultPlot <- renderPlot({
-    if(nrow(RecR())){
-      data <- RecR()
-      data$Proability <- round(data$Proability*100,2)
-      
-      Interval <- as.numeric(unlist(strsplit(input$GC_Interval,",",fixed=T)))
-      Color <- unlist(strsplit(input$GC_Color,",",fixed=T))
-      Label <- unlist(strsplit(input$GC_Label,",",fixed=T))
-      n <- length(Interval) + 1
-      if(length(Color) < n) Color[(n-length(Color)):n] <- "black"
-      else Color <- Color[1:n]
-      if(length(Label) < n) Label[(n-length(Label)):n] <- "NA"
-      else Label <- Label[1:n]
-      
-      if(input$Type == "marginal"){
-        x <- paste(data$Variable,":",data$Level,sep="")
-        data_plot <- data.frame(x=x,p=data$Proability)
-        g <<- ggplot(data=data_plot,aes(x=x,y=p))+
-          geom_bar(stat = "identity",fill="lightblue")+
-          geom_text(aes(x=x,y=p+4,label=p))+
-          scale_y_continuous("Predict  Probability (%)",expand=c(0,0),lim=c(0,105))+
-          scale_x_discrete(NULL)+
-          theme(panel.background = element_rect(fill = "transparent",colour = NA),
-                panel.grid.minor = element_blank(),
-                panel.grid.major = element_blank(),
-                plot.background = element_rect(fill = "transparent",colour = NA),
-                axis.line = element_line(colour = "black"),
-                axis.text.x = element_text(size=10),
-                axis.title.y = element_text(angle=90,size = 14))
-        if(input$GC_TF){
-          index <- sapply(data$Proability,function(a){sum(a > Interval)})
-          data_plot$col <- Label[index+1]
-          g <<- ggplot(data=data_plot,aes(x=x,y=p,fill=col))+
-            geom_bar(stat = "identity")+
+    if(input$Infer_type == 'Single Prediction'){
+      if(nrow(RecR())){
+        data <- RecR()
+        data$Proability <- round(data$Proability*100,2)
+        
+        Interval <- as.numeric(unlist(strsplit(input$GC_Interval,",",fixed=T)))
+        Color <- unlist(strsplit(input$GC_Color,",",fixed=T))
+        Label <- unlist(strsplit(input$GC_Label,",",fixed=T))
+        n <- length(Interval) + 1
+        if(length(Color) < n) Color[(n-length(Color)):n] <- "black"
+        else Color <- Color[1:n]
+        if(length(Label) < n) Label[(n-length(Label)):n] <- "NA"
+        else Label <- Label[1:n]
+        
+        if(input$Type == "marginal"){
+          x <- paste(data$Variable,":",data$Level,sep="")
+          data_plot <- data.frame(x=x,p=data$Proability)
+          g <<- ggplot(data=data_plot,aes(x=x,y=p))+
+            geom_bar(stat = "identity",fill="lightblue")+
             geom_text(aes(x=x,y=p+4,label=p))+
-            scale_fill_manual(NULL,values=Color,limits = Label)+
             scale_y_continuous("Predict  Probability (%)",expand=c(0,0),lim=c(0,105))+
             scale_x_discrete(NULL)+
             theme(panel.background = element_rect(fill = "transparent",colour = NA),
@@ -1172,81 +1297,98 @@ shinyServer(function(input,output,session){
                   plot.background = element_rect(fill = "transparent",colour = NA),
                   axis.line = element_line(colour = "black"),
                   axis.text.x = element_text(size=10),
-                  axis.title.y = element_text(angle=90,size = 14),
-                  legend.position = c(input$RLegend_x/100,input$RLegend_y/100),
-                  legend.text = element_text(size=input$RLegend_TextSize))
-          if(input$GC_Label== 'NULL') g <<- g + theme(legend.position='none')
-        }
-        g
-      }else{
-        nc <- ncol(data) - 1
-        nr <- nrow(data)
-        data$IndexXxXxX <- letters[1:nr]
-        data2 <- data.frame(lx=rep(data$IndexXxXxX,nc),ly=rep(1:nc*-4,each=nr),lab=unlist2(data[,1:nc]),stringsAsFactors=F)
-        g <<- ggplot(data,aes(x=IndexXxXxX))+
-          geom_bar(aes(weight=Proability),fill="lightblue")+
-          geom_text(aes(x=IndexXxXxX,y=Proability+4,label=Proability))+
-          geom_text(data = data2,aes(x = lx,y = ly,label=lab))+
-          scale_x_discrete(NULL,breaks=NULL)+
-          scale_y_continuous("Predict  Probability(%)",expand=c(0,0),lim=c(nc*-5,105),breaks=c(1:nc*-4,seq(20,100,20)),
-                             labels=c(colnames(data)[1:nc],seq(20,100,20)))+
-          geom_hline(aes(yintercept=0))+
-          geom_line(data=data.frame(n=c(0,0),m=c(0,100)),aes(n,m),group=1,size=1.1)+
-          theme(panel.background = element_rect(fill = "transparent",colour = NA),
-                panel.grid.minor = element_blank(),
-                panel.grid.major = element_blank(),
-                plot.background = element_rect(fill = "transparent",colour = NA),
-                axis.line = element_line(colour=NA),
-                axis.ticks.x = element_line(colour = NA),
-                axis.ticks.y = element_line(colour = NA),
-                axis.title.y = element_text(angle=90,size = 14))
-        
-        if(input$GC_TF){
-          index <- sapply(data$Proability,function(a){sum(a > Interval)})
-          data$col <- Label[index+1]
-          
-          g <<- ggplot(data=data)+
-            geom_bar(aes(x=IndexXxXxX,weight=Proability,fill=col))+
+                  axis.title.y = element_text(angle=90,size = 14))
+          if(input$GC_TF){
+            index <- sapply(data$Proability,function(a){sum(a > Interval)})
+            data_plot$col <- Label[index+1]
+            g <<- ggplot(data=data_plot,aes(x=x,y=p,fill=col))+
+              geom_bar(stat = "identity")+
+              geom_text(aes(x=x,y=p+4,label=p))+
+              scale_fill_manual(NULL,values=Color,limits = Label)+
+              scale_y_continuous("Predict  Probability (%)",expand=c(0,0),lim=c(0,105))+
+              scale_x_discrete(NULL)+
+              theme(panel.background = element_rect(fill = "transparent",colour = NA),
+                    panel.grid.minor = element_blank(),
+                    panel.grid.major = element_blank(),
+                    plot.background = element_rect(fill = "transparent",colour = NA),
+                    axis.line = element_line(colour = "black"),
+                    axis.text.x = element_text(size=10),
+                    axis.title.y = element_text(angle=90,size = 14),
+                    legend.position = c(input$RLegend_x/100,input$RLegend_y/100),
+                    legend.text = element_text(size=input$RLegend_TextSize))
+            if(input$GC_Label== 'NULL') g <<- g + theme(legend.position='none')
+          }
+          g
+        }else{
+          nc <- ncol(data) - 1
+          nr <- nrow(data)
+          data$IndexXxXxX <- letters[1:nr]
+          data2 <- data.frame(lx=rep(data$IndexXxXxX,nc),ly=rep(1:nc*-4,each=nr),lab=unlist2(data[,1:nc]),stringsAsFactors=F)
+          g <<- ggplot(data,aes(x=IndexXxXxX))+
+            geom_bar(aes(weight=Proability),fill="lightblue")+
             geom_text(aes(x=IndexXxXxX,y=Proability+4,label=Proability))+
             geom_text(data = data2,aes(x = lx,y = ly,label=lab))+
-            scale_fill_manual(NULL,values=Color,limits = Label)+
-            geom_hline(aes(yintercept=0))+
-            geom_line(data=data.frame(n=c(0,0),m=c(0,100)),aes(n,m),group=1,size=1.1)+
             scale_x_discrete(NULL,breaks=NULL)+
             scale_y_continuous("Predict  Probability(%)",expand=c(0,0),lim=c(nc*-5,105),breaks=c(1:nc*-4,seq(20,100,20)),
                                labels=c(colnames(data)[1:nc],seq(20,100,20)))+
+            geom_hline(aes(yintercept=0))+
+            geom_line(data=data.frame(n=c(0,0),m=c(0,100)),aes(n,m),group=1,size=1.1)+
             theme(panel.background = element_rect(fill = "transparent",colour = NA),
                   panel.grid.minor = element_blank(),
                   panel.grid.major = element_blank(),
                   plot.background = element_rect(fill = "transparent",colour = NA),
-                  axis.text.x = element_text(size=10),
+                  axis.line = element_line(colour=NA),
                   axis.ticks.x = element_line(colour = NA),
                   axis.ticks.y = element_line(colour = NA),
-                  axis.title.y = element_text(angle=90,size = 14),
-                  legend.position = c(input$RLegend_x/100,input$RLegend_y/100),
-                  legend.text = element_text(size=input$RLegend_TextSize))
+                  axis.title.y = element_text(angle=90,size = 14))
           
-          if(input$GC_Label== 'NULL') g <<- g + theme(legend.position='none')
+          if(input$GC_TF){
+            index <- sapply(data$Proability,function(a){sum(a > Interval)})
+            data$col <- Label[index+1]
+            
+            g <<- ggplot(data=data)+
+              geom_bar(aes(x=IndexXxXxX,weight=Proability,fill=col))+
+              geom_text(aes(x=IndexXxXxX,y=Proability+4,label=Proability))+
+              geom_text(data = data2,aes(x = lx,y = ly,label=lab))+
+              scale_fill_manual(NULL,values=Color,limits = Label)+
+              geom_hline(aes(yintercept=0))+
+              geom_line(data=data.frame(n=c(0,0),m=c(0,100)),aes(n,m),group=1,size=1.1)+
+              scale_x_discrete(NULL,breaks=NULL)+
+              scale_y_continuous("Predict  Probability(%)",expand=c(0,0),lim=c(nc*-5,105),breaks=c(1:nc*-4,seq(20,100,20)),
+                                 labels=c(colnames(data)[1:nc],seq(20,100,20)))+
+              theme(panel.background = element_rect(fill = "transparent",colour = NA),
+                    panel.grid.minor = element_blank(),
+                    panel.grid.major = element_blank(),
+                    plot.background = element_rect(fill = "transparent",colour = NA),
+                    axis.text.x = element_text(size=10),
+                    axis.ticks.x = element_line(colour = NA),
+                    axis.ticks.y = element_line(colour = NA),
+                    axis.title.y = element_text(angle=90,size = 14),
+                    legend.position = c(input$RLegend_x/100,input$RLegend_y/100),
+                    legend.text = element_text(size=input$RLegend_TextSize))
+            
+            if(input$GC_Label== 'NULL') g <<- g + theme(legend.position='none')
+          }
+          g
         }
-        g
+      }else{
+        fit <- recFit()
+        if(! is.null(fit)){
+          if("bn" %in% class(fit)) inlabel <- "Please fit the Parameter of Network !"
+          else inlabel <- "Please choose your query nodes !"
+        }
+        
+        g<<- ggplot(data.frame(x=400,y=400),aes(x,y))+
+          geom_text(aes(label=inlabel),color="red",size=4.5)+
+          theme(panel.background = element_rect(fill = "transparent",colour = NA),
+                panel.grid.minor = element_blank(),
+                panel.grid.major = element_blank(),
+                plot.background = element_rect(fill = "transparent",colour = NA))+
+          scale_x_continuous(NULL,breaks=NULL)+
+          scale_y_continuous(NULL,breaks=NULL)
       }
-    }else{
-      fit <- recFit()
-      if(! is.null(fit)){
-        if("bn" %in% class(fit)) inlabel <- "Please fit the Parameter of Network !"
-        else inlabel <- "Please choose your query nodes !"
-      }
-      
-      g<<- ggplot(data.frame(x=400,y=400),aes(x,y))+
-        geom_text(aes(label=inlabel),color="red",size=4.5)+
-        theme(panel.background = element_rect(fill = "transparent",colour = NA),
-              panel.grid.minor = element_blank(),
-              panel.grid.major = element_blank(),
-              plot.background = element_rect(fill = "transparent",colour = NA))+
-        scale_x_continuous(NULL,breaks=NULL)+
-        scale_y_continuous(NULL,breaks=NULL)
-      g
     }
+    g
   })
   
   # Query results in table
@@ -1261,4 +1403,351 @@ shinyServer(function(input,output,session){
       ggsave(file,g,width=as.numeric(input$Pwidth),height=as.numeric(input$Pheight))
     }, contentType = 'application/pdf'
   )
+  
+  
+  # Input and get the valid data.
+  Rec_Valid <- reactive({
+    valid_data <<- NULL
+    if(input$Infer_type == 'Validation Set'){
+      fit <- recFit()
+      if(! is.null(fit) & "bn.fit" %in% class(fit)){
+        if(input$inType == "Raw Data(.csv)" & input$YNsplit == "yes" & input$Valid_Sample == "Split Sample"){
+          file_in <- input$inFile
+          data <- read.table(file_in$datapath, header = input$inHeader, sep= input$inSep,colClasses = "factor",na.strings = c("NA",""))
+          if(input$Split_Proportion == "7:3") proportion <- 0.7
+          else if(input$Split_Proportion == "6:4") proportion <- 0.6
+          else if(input$Split_Proportion == "5:5") proportion <- 0.5
+          else if(input$Split_Proportion == "8:2") proportion <- 0.8
+          else proportion <- 0.9
+          set.seed(666)
+          index <- sample(1:nrow(data),replace = FALSE,size=proportion*nrow(data))
+          valid_data <<- data[-index,]
+        }
+        else if(input$inType != "Raw Data(.csv)" | input$Valid_Sample == 'Upload dataset'){
+          file_valid <- input$ValidSet
+          if(! is.null(file_valid)){
+            n_char <- nchar(file_valid$name)
+            if(substr(file_valid$name,n_char-2,n_char) == "csv"){
+              valid_data <<- read.table(file_valid$datapath, header = input$ValidHeader, 
+                                        sep= input$ValidSep,stringsAsFactors = F,na.strings = c("NA",""))
+            }else {vals$Valid_ERROR <- 1; valid_data <-NULL}
+          }
+          if(! is.null(valid_data)){
+            # Check for variable
+            inName1 <- colnames(valid_data)
+            inName2 <- nodes(fit)
+            Cname1 <- inName1 %in% inName2
+            Cname2 <- toupper(inName1) %in% toupper(inName2)
+            dif_name <- which(Cname1!=Cname2 & Cname2==T)
+            colnames(valid_data)[dif_name] <<- inName2[match(toupper(inName1[dif_name]),toupper(inName2))]
+            Check_result1 <<- colnames(valid_data) %in% inName2
+            
+            if(all(Check_result1)){
+              # Check for the value of variable
+              Check_result2 <<- NULL
+              for(index in 1:ncol(valid_data)){
+                tmp <- fit[[colnames(valid_data)[index]]]
+                valuelist_Net <- rownames(tmp$prob)
+                valuelist_In  <- unique(valid_data[,index])
+                valuelist_In <- valuelist_In[! is.na(valuelist_In)]
+                if(all(valuelist_In %in% valuelist_Net)) Check = T
+                else Check = F
+                Check_result2 <<- c(Check_result2,Check)
+              }
+              if(! all(Check_result2)) {vals$Valid_ERROR <- 3; valid_data <-NULL}
+            }else {vals$Valid_ERROR <- 2; valid_data <-NULL}
+          }
+        }
+      }
+    }
+    valid_data
+  })
+  
+  # Predict and Imput.
+  rec_Pred_Impu <- reactive({
+    Valid_Set <- Rec_Valid()
+    fit <- recFit()
+    use_Set <- NULL
+    in_outcome <- NULL
+    prob_outcome <- NULL
+    out1 <- NULL
+    # Check if the selected outcome node in uploaded validation Set.
+    if(! is.null(Valid_Set)){
+      time <- ceiling(nrow(Valid_Set)/500*30)
+      progress <- Progress$new(session, min=1, max=time)
+      on.exit(progress$close())
+      
+      progress$set(message = 'Calculation in progress',
+                   detail = 'This may take a while...')
+      
+      for (i in 1:time) {
+        progress$set(value = i)
+        Sys.sleep(0.5)
+      }
+      
+      if(! input$ValidVar %in% colnames(Valid_Set)){
+        use_Set <- Valid_Set
+        vals$Valid_ERROR <- 4
+      } 
+      else{
+        in_outcome <- Valid_Set[,input$ValidVar]
+        if(any(is.na(in_outcome))) vals$Valid_Warning <- 1
+        use_Set <- subset(Valid_Set,select=-which(colnames(Valid_Set)==input$ValidVar))
+      }
+      vname <- colnames(use_Set)
+      compile_fit <- compile(as.grain((fit)))
+      quer <- function(inobs){
+        tree_query <- setEvidence(compile_fit, nodes=vname, states=inobs)
+        a<-querygrain(tree_query,nodes = input$ValidVar)
+        return(a)
+      }
+      out <- apply(use_Set, 1, quer)
+      out1 <- t(as.data.frame(out))
+    }
+    
+    if(! is.null(out1) & ! is.null(use_Set)){
+      if(! is.null(in_outcome)){
+        out_data <- data.frame(use_Set,in_outcome,out1)
+        colnames(out_data) <- c(colnames(use_Set),input$ValidVar,paste0("Pred_",input$ValidVar,colnames(out1)))
+      }else{
+        out_data <- data.frame(use_Set,out1)
+        colnames(out_data)[ncol(out_data)-ncol(out1)+1:ncol(out_data)] <- c(colnames(use_Set),paste0("Pred_",input$ValidVar,colnames(out1)))
+      }
+      valid <<- list(in_outcome=in_outcome,
+                     prob_outcome=out1,
+                     out_data=out_data)
+    }
+    else valid <<- NULL
+    valid
+  })
+  
+  # ROC/DCA
+  output$ROCDCA <- renderPlot({
+    valid_out <- rec_Pred_Impu()
+    if(! is.null(valid_out)){
+      if(! is.null(valid_out[["in_outcome"]])){
+        if(input$ROCorDCA == "ROC"){
+          in_outcome <- (valid_out[["in_outcome"]] == input$ValidValue)
+          prob_outcome <- valid_out[["prob_outcome"]][,which(colnames(valid_out$prob_outcome)==input$ValidValue)]
+          model <<- roc(in_outcome,prob_outcome,
+                        smooth=input$ROC_smooth,
+                        ci=T,
+                        of="auc")
+          
+          if(input$AUC_CI == T) auc_pattern = ifelse(model$percent, " AUC: %.1f \n(%.1f%%, %.1f%%)", "  AUC: %.3f \n(%.3f, %.3f)")
+          else auc_pattern = ifelse(model$percent, "AUC: %.1f", "AUC: %.3f")
+          
+          ROC_DCA <- plot(model,legacy.axes=T,
+                          col=input$ROC_color,
+                          lty=input$ROC_linetype,
+                          lwd=input$ROC_lwd,
+                          print.thres=input$Threshold,
+                          print.thres.col=input$Threshold_color,
+                          print.thres.cex=input$Threshold_size,
+                          print.thres.pattern=ifelse(model$percent, "%.1f", "%.3f"),
+                          print.auc=input$AUC,
+                          print.auc.col=input$AUC_color,
+                          print.auc.cex=input$AUC_size,
+                          print.auc.pattern=auc_pattern,
+                          grid=input$grid,
+                          grid.col=input$grid_color,
+                          grid.lty=input$grid_linetype,
+                          grid.lwd=input$grid_lwd,
+                          auc.polygon=input$polygon,
+                          auc.polygon.col=input$polygon_color)
+        }
+        else{
+          in_outcome <- as.numeric(valid_out[["in_outcome"]] == input$ValidValue)
+          prob_outcome <- valid_out[["prob_outcome"]][,which(colnames(valid_out$prob_outcome)==input$ValidValue)]
+          data_use <- data.frame(in_outcome=in_outcome,prob_outcome=prob_outcome)
+          
+          model <<- decision_curve(in_outcome~prob_outcome,
+                                  data=data_use,
+                                  fitted.risk=T,
+                                  thresholds = seq(0, 1, by = .01),
+                                  confidence.intervals = 'none')
+          
+          if(gsub(" ","",input$DCA_col) == "") DCA_col <- c("darkred","black","black")
+          else DCA_col <- tolower(unlist(strsplit(input$DCA_col,",",fixed=T)))
+          if(length(DCA_col) < 3) DCA_col <- c(DCA_col,rep("black",3-length(DCA_col)))
+            
+          if(gsub(" ","",input$DCA_lty) == "") DCA_lty <- c("solid,dashed,solid")
+          else DCA_lty <- tolower(unlist(strsplit(input$DCA_lty,",",fixed=T)))
+          if(length(DCA_lty) == 1) DCA_lty <- c(DCA_lty,"dashed","solid")
+          if(length(DCA_lty) == 2) DCA_lty <- c(DCA_lty,"solid")
+          
+          if(gsub(" ","",input$DCA_lwd) == "") DCA_lwd <- c(2,2,2)
+          else DCA_lwd <- as.numeric(unlist(strsplit(input$DCA_lwd,",",fixed=T)))
+          
+          if(gsub(" ","",input$DCA_xlim) == "") DCA_xlim <- c(0,1)
+          else DCA_xlim <- as.numeric(unlist(strsplit(input$DCA_xlim,",",fixed=T)))
+          if(length(DCA_xlim) == 1) DCA_xlim <- c(0,DCA_xlim)
+          else if (length(DCA_xlim) > 2) DCA_xlim <- DCA_xlim[1:2]
+          
+          if(gsub(" ","",input$DCA_ylim) == "") DCA_ylim <- c(0,1)
+          else DCA_ylim <- as.numeric(unlist(strsplit(input$DCA_ylim,",",fixed=T)))
+          if(length(DCA_ylim) == 1) DCA_ylim <- c(0,DCA_ylim)
+          else if (length(DCA_ylim) > 2) DCA_ylim <- DCA_ylim[1:2]
+          
+          ROC_DCA <- plot_decision_curve(model,
+                                         curve.names = input$DCA_name,
+                                         cost.benefit.axis = F, #down additional x-axis
+                                         standardize=input$DCA_stand,
+                                         axes = T,
+                                         col = DCA_col,
+                                         lty = DCA_lty,
+                                         lwd = DCA_lwd,
+                                         xlim = DCA_xlim,
+                                         ylim = DCA_ylim,
+                                         xlab = input$DCA_xlab,
+                                         legend.position=input$DCA_leg.posi)
+        }
+      }
+      ROC_DCA
+    }
+    
+  },width=500,height=500)
+  
+  # Predict Validation Set (.csv)
+  output$Validation.csv <- downloadHandler(
+    filename = "Validation.csv",
+    content = function(file){
+      write.table(rec_Pred_Impu()[["out_data"]],file=file,row.names = F,sep = ",")
+    }, contentType = 'text/csv'
+  )
+  
+  # ROC (.pdf)
+  output$ROC_download.pdf <- downloadHandler(
+    filename = "ROC_download.pdf",
+    content = function(file){
+      pdf(file,width = as.numeric(input$Pwidth),height=as.numeric(input$Pheight))
+        if(input$AUC_CI == T) auc_pattern = ifelse(model$percent, " AUC: %.1f \n(%.1f%%, %.1f%%)", "  AUC: %.3f \n(%.3f, %.3f)")
+        else auc_pattern = ifelse(model$percent, "AUC: %.1f", "AUC: %.3f")
+        plot(model,legacy.axes=T,
+             col=input$ROC_color,
+             lty=input$ROC_linetype,
+             lwd=input$ROC_lwd,
+             print.thres=input$Threshold,
+             print.thres.col=input$Threshold_color,
+             print.thres.cex=input$Threshold_size,
+             print.thres.pattern=ifelse(model$percent, "%.1f", "%.3f"),
+             print.auc=input$AUC,
+             print.auc.col=input$AUC_color,
+             print.auc.cex=input$AUC_size,
+             print.auc.pattern=auc_pattern,
+             grid=input$grid,
+             grid.col=input$grid_color,
+             grid.lty=input$grid_linetype,
+             grid.lwd=input$grid_lwd,
+             auc.polygon=input$polygon,
+             auc.polygon.col=input$polygon_color)
+        
+      dev.off()
+    }, contentType = 'application/pdf'
+  )
+  
+  # DCA (.pdf)
+  output$DCA_download.pdf <- downloadHandler(
+    filename = "DCA_download.pdf",
+    content = function(file){
+      pdf(file,width = as.numeric(input$Pwidth),height=as.numeric(input$Pheight))
+      
+        if(gsub(" ","",input$DCA_col) == "") DCA_col <- c("darkred","black","black")
+        else DCA_col <- tolower(unlist(strsplit(input$DCA_col,",",fixed=T)))
+        if(length(DCA_col) < 3) DCA_col <- c(DCA_col,rep("black",3-length(DCA_col)))
+        
+        if(gsub(" ","",input$DCA_lty) == "") DCA_lty <- c("solid,dashed,solid")
+        else DCA_lty <- tolower(unlist(strsplit(input$DCA_lty,",",fixed=T)))
+        if(length(DCA_lty) == 1) DCA_lty <- c(DCA_lty,"dashed","solid")
+        if(length(DCA_lty) == 2) DCA_lty <- c(DCA_lty,"solid")
+        
+        if(gsub(" ","",input$DCA_lwd) == "") DCA_lwd <- c(2,2,2)
+        else DCA_lwd <- as.numeric(unlist(strsplit(input$DCA_lwd,",",fixed=T)))
+        
+        if(gsub(" ","",input$DCA_xlim) == "") DCA_xlim <- c(0,1)
+        else DCA_xlim <- as.numeric(unlist(strsplit(input$DCA_xlim,",",fixed=T)))
+        if(length(DCA_xlim) == 1) DCA_xlim <- c(0,DCA_xlim)
+        else if (length(DCA_xlim) > 2) DCA_xlim <- DCA_xlim[1:2]
+        
+        if(gsub(" ","",input$DCA_ylim) == "") DCA_ylim <- c(0,1)
+        else DCA_ylim <- as.numeric(unlist(strsplit(input$DCA_ylim,",",fixed=T)))
+        if(length(DCA_ylim) == 1) DCA_ylim <- c(0,DCA_ylim)
+        else if (length(DCA_ylim) > 2) DCA_ylim <- DCA_ylim[1:2]
+        
+        plot_decision_curve(model,
+                            curve.names = input$DCA_name,
+                            cost.benefit.axis = F, #down additional x-axis
+                            standardize=input$DCA_stand,
+                            axes = T,
+                            col = DCA_col,
+                            lty = DCA_lty,
+                            lwd = DCA_lwd,
+                            xlim = DCA_xlim,
+                            ylim = DCA_ylim,
+                            xlab = input$DCA_xlab,
+                            legend.position=input$DCA_leg.posi)
+      dev.off()
+      
+    }, contentType = 'application/pdf'
+  )
+  
+  
+  # Index
+  output$Index_table <- reactive({
+    
+  })
+  
+  output$Index_table <- renderDataTable(RecQ(),class="compact",options=list(searching=T,
+                                                                            columnDefs=list(list(className = 'dt-center'))))
+  
+  output$index <- renderPrint({
+    
+    valid_out <- rec_Pred_Impu()
+    text = "Please upload validation set"
+    
+    if(! is.null(valid_out)){
+      if(! is.null(valid_out[["in_outcome"]])){
+        in_outcome <- (valid_out[["in_outcome"]] == input$ValidValue)
+        prob_outcome <- valid_out[["prob_outcome"]][,which(colnames(valid_out$prob_outcome)==input$ValidValue)]
+        out_outcome <- as.numeric(prob_outcome >= input$Case_Prob)
+        
+        Confusion_Matix<-table("Pred Outcome"=out_outcome,
+                               "In Outcome"=in_outcome)
+        
+        TN  = Confusion_Matix[1]
+        FP  = Confusion_Matix[2]
+        FN  = Confusion_Matix[3]
+        TP  = Confusion_Matix[4]
+        Tot = TN+FP+FN+TP
+        Se  = TP/(TP+FN)
+        Sp  = TN/(TN+FP)
+        Youden = Se + Sp - 1
+        ACC = (TP+TN)/Tot
+        Pre = TP/(TP+FP)
+        Pa  = (TP+TN)/Tot
+        Pe  = ((TP+FP)*(TP+FN)+(FN+TN)*(FP+TN))/(Tot*Tot)
+        Kappa = (Pa-Pe)/(1-Pe)
+        Index1 <- data.frame('True_Positive'=TP,
+                             'False_Positive'=FP,
+                             'True_Negative'=TN,
+                             'False_Negative'=FN,check.names = F)
+        Index2 <- data.frame('Sensitivity'=Se,
+                             'Specificity'=Sp,
+                             'Accuracy'=ACC,
+                             'Precision'=Pre,
+                             'Kappa'=Kappa,check.names = F)
+        rownames(Index1) <- NULL
+        rownames(Index2) <- NULL
+        title <- list("Variable: "=input$ValidVar,"Value: "=input$ValidValue,"Threshold: "=input$Case_Prob)
+        text <- list('Content'=title,
+                     "Confusion Matrix"=Confusion_Matix,
+                     'Index1'=Index1,
+                     'Index2'=Index2)
+      }
+    }
+    
+    text
+  })
+  
+  
 })

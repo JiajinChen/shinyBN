@@ -13,7 +13,10 @@ require(AnnotationDbi)
 require(shinyjqui)
 require(igraph)
 require(sqldf)
-require(xlsx)
+require(writexl)
+require(readxl)
+require(pROC)
+require(rmda)
 require(knitr)
 
 Evid_tab<-data.frame(Evidence=character(),Value=character(),stringsAsFactors=FALSE)
@@ -38,12 +41,15 @@ source("render.R")
 source("inference.R")
 
 out_text="Log:\n"
+out_textV="Log:\n"
+out_textR="Log:\n"
 n_AE <- 0
 n_DE <- 0
 n_AQ <- 0
 n_DQ <- 0
 n_AP <- 0
 n_DP <- 0
+n_CP <- 0
 n_GP <- 0
 white <- NULL
 black <- NULL
@@ -60,4 +66,6 @@ n_DLegeE <- 0
 n_ClearEvi <- 0
 n_ClearQue <- 0
 n_LogClear <- 0
+n_LogCleav <- 0
+n_LogCleaRender <- 0
 n_NetDownload <- 0

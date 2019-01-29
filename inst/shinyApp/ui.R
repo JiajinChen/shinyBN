@@ -52,7 +52,7 @@ shinyUI(
         icon = "circle",
         active = T,
         conditionalPanel(
-          condition = "input.inType != 'Structure in Excel'",
+          condition = "input.inType == 'Raw Data(.csv)' | input.inType == 'R Object(.Rdata)' | (input.inType == 'R Object in R' & input.inFit != 'Stroke_bnfit')",
           h4("Initial parameters for all nodes:"),
           column(width=12,
                  column(width=6,radioButtons("IN_color_type","Nodes Color:",c("Self-defined","SCI-Style","Pic-Style"))),
@@ -172,7 +172,7 @@ shinyUI(
         title = "Edges:",
         icon = "long-arrow-alt-right",
         conditionalPanel(
-          condition = "input.inType != 'Structure in Excel'",
+          condition = "input.inType == 'Raw Data(.csv)' | input.inType == 'R Object(.Rdata)' | (input.inType == 'R Object in R' & input.inFit != 'Stroke_bnfit')",
           h4("Initial parameters for all edges:"),
           column(width=12,
                  column(width=6,selectInput("IE_color","Edges Color:",c("gray","red","orange","yellow","green","Other"))),
@@ -213,11 +213,11 @@ shinyUI(
                ),
                conditionalPanel(
                  condition = "input.E_Intype == 'List'  | input.inType != 'Structure in Excel'",
-                 column(width=6,uiOutput("E"))
+                 column(width=12,uiOutput("E"))
                ),
                conditionalPanel(
                  condition = "input.E_Intype == 'Group in Excel'",
-                 column(width=6,uiOutput("Edge_Group"))
+                 column(width=12,uiOutput("Edge_Group"))
                ),
                column(width=6,uiOutput("E_Render")),
                conditionalPanel(
@@ -268,34 +268,56 @@ shinyUI(
         id = 3,
         icon = "chart-bar",
         title = "Inference:",
-        radioButtons ("Q_Intype","Select nodes by:",c("List","Click graph"),inline = T),
+        radioButtons("Infer_type",NULL,c("Single Prediction","Validation Set"),inline=T),
         conditionalPanel(
-          condition = "input.Q_Intype == 'Click graph'",
-          verbatimTextOutput("Q_return")
+          condition = "input.Infer_type == 'Single Prediction'",
+          radioButtons("Q_Intype","Select nodes by:",c("List","Click graph"),inline = T),
+          conditionalPanel(
+            condition = "input.Q_Intype == 'Click graph'",
+            verbatimTextOutput("Q_return")
+          ),
+          conditionalPanel(
+            condition = "input.Q_Intype == 'List'",
+            uiOutput("evidence")
+          ),
+          uiOutput("E_value"),
+          fluidRow(
+            column(width=4,actionButton("AddButtonE", "Add",icon=icon("plus"),lib="glyphicon")),
+            column(width=4,actionButton("delButtonE", "Delete",icon=icon("trash"),lib="glyphicon")),
+            column(width=4,actionButton("ClearButtonE", "Clear",icon=icon("refresh"),lib="glyphicon"))
+          ),
+          column(width=12,br("")),
+          uiOutput("query"),
+          conditionalPanel(
+            condition = "input.Type == 'marginal'",
+            uiOutput("Q_value")
+          ),
+          fluidRow(
+            column(width=4,actionButton("AddButtonQ", "Add",icon=icon("plus"),lib="glyphicon")),
+            column(width=4,actionButton("delButtonQ", "Delete",icon=icon("trash"),lib="glyphicon")),
+            column(width=4,actionButton("ClearButtonQ", "Clear",icon=icon("refresh"),lib="glyphicon"))
+          ),
+          column(width=12,br("")),
+          radioButtons("Type","Choose the type:",c("Marginal" = "marginal","Joint" = "joint"),inline=T)
         ),
         conditionalPanel(
-          condition = "input.Q_Intype == 'List'",
-          uiOutput("evidence")
-        ),
-        uiOutput("E_value"),
-        fluidRow(
-          column(width=4,actionButton("AddButtonE", "Add",icon=icon("plus"),lib="glyphicon")),
-          column(width=4,actionButton("delButtonE", "Delete",icon=icon("trash"),lib="glyphicon")),
-          column(width=4,actionButton("ClearButtonE", "Clear",icon=icon("refresh"),lib="glyphicon"))
-        ),
-        column(width=12,br("")),
-      uiOutput("query"),
-        conditionalPanel(
-          condition = "input.Type == 'marginal'",
-          uiOutput("Q_value")
-        ),
-      fluidRow(
-          column(width=4,actionButton("AddButtonQ", "Add",icon=icon("plus"),lib="glyphicon")),
-          column(width=4,actionButton("delButtonQ", "Delete",icon=icon("trash"),lib="glyphicon")),
-          column(width=4,actionButton("ClearButtonQ", "Clear",icon=icon("refresh"),lib="glyphicon"))
-        ),
-        column(width=12,br("")),
-        radioButtons("Type","Choose the type:",c("Marginal" = "marginal","Joint" = "joint"),inline=T)
+          condition = "input.Infer_type == 'Validation Set'",
+          conditionalPanel(
+            condition = "input.inType == 'Raw Data(.csv)' & input.YNsplit == 'yes'",
+            radioButtons("Valid_Sample","Using:",c("Split Sample","Upload dataset"),inline=T)
+          ),
+          conditionalPanel(
+            condition = "input.inType != 'Raw Data(.csv)' | input.Valid_Sample == 'Upload dataset'",
+            fileInput("ValidSet","Upload validation Set:(csv)"),
+            column(width=3,checkboxInput("ValidHeader","Header?",TRUE)),
+            column(width=9,radioButtons("ValidSep","Separator:",c("Comma"=",","Tabs"="\t","Spaces"=" "),inline = T)),
+            helpText("WARNING: The variable should have the same names and values with Network.")
+          ),
+          uiOutput("ValidVarUI"),   #input$ValidVar
+          uiOutput("ValidValueUI"), #input$ValidValue
+          sliderInput("Case_Prob","Threshold of Probability to ",0,1,0.5,step=0.01),
+          radioButtons("ROCorDCA","Plot ROC or DCA:",c("ROC","DCA"),inline = T)
+        )
       )
     ),
     body = dashboardBody(

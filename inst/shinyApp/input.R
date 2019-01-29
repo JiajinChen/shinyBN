@@ -17,7 +17,15 @@ input_page <- tabItem(
     h4(strong("Structure learning:")),
     column(width=12,
            column(width=4,fileInput("inFile","Choose your Raw Data(.csv):")),
-           column(width=4,checkboxInput("inHeader","Header?",TRUE))),
+           column(width=4,checkboxInput("inHeader","Header?",TRUE)),
+           column(width=4,radioButtons("inSep","Separator:",c("Comma"=",","Tabs"="\t","Spaces"=" "),inline = T))),
+    column(width=12,
+           column(width=6,radioButtons("YNsplit","Training network using:",c("All sample"="no","Split sample for model validation"="yes"),inline = T)),
+           conditionalPanel(
+             condition = "input.YNsplit == 'yes'",
+             column(width=6,radioButtons("Split_Proportion","Proportion:",c("5:5","6:4","7:3","8:2","9:1"),selected="7:3",inline=T))
+           )),
+    column(width=12,br()),
     column(width=12,
            column(width=4,selectInput("inLearnType","Type of Structure Algorithm:",c("Score-Based Algorithms","Constraint-Based Algorithms",
                                                                                      "Hybrid Algorithms","Bootstrap"))),
@@ -36,15 +44,16 @@ input_page <- tabItem(
              column(width=4,selectInput("inLearn3","Structure Algorithm:",c("Max-Min Hill Climbing","2-phase Restricted Maximization")))),
            conditionalPanel(
              condition = "input.inLearnType == 'Bootstrap'",
-             column(width=4,selectInput("inLearn4","Structure Algorithm:",c("hill-climbing"="hc","tabu search"='tabu',"Grow-Shrink"='gs',"Incremental Association"='iamb',
-                                                             "Fast Incremental Association"='fast.iamb',"Interleaved Incremental Association"='inter.iamb',
-                                                             "Max-Min Hill Climbing"='mmhc',"2-phase Restricted Maximization"='rsmax2'))),
+             column(width=4,selectInput("inLearn4","Structure Algorithm:",list(`Score-Based Algorithms`=c("hill-climbing"="hc","tabu search"='tabu'),
+                                                                               `Constraint-Based Algorithms`=c("Grow-Shrink"='gs',"Incremental Association"='iamb',"Fast Incremental Association"='fast.iamb',"Interleaved Incremental Association"='inter.iamb'),
+                                                                               `Hybrid Algorithms`=c("Max-Min Hill Climbing"='mmhc',"2-phase Restricted Maximization"='rsmax2')))),
              conditionalPanel(
                condition = "input.inLearn4 =='hc' || input.inLearn4 =='tabu'",
                column(width=4,selectInput("inScore4","Score:",c("Bayesian Information Criterion score"="bic","Akaike Information Criterion score"="aic","Multinomial log-likelihood score"="loglik",
                                                  "Bayesian Dirichlet equivalent score"="bde","Bayesian Dirichlet sparse score"="bds","Modified Bayesian Dirichlet equivalent score"="mbde",
                                                  "Locally averaged Bayesian Dirichlet score"="bdla","K2 score"="k2")))),
-             column(width=7,radioButtons("N_Boot","Num of Boot:",c(10,500,1000,2000),inline=T))
+             column(width=4,radioButtons("N_Boot","Num of Boot:",c(10,500,1000,2000),inline=T)),
+             column(width=5,sliderInput("Strength_Boot","Strength threshold:",0.5,1,0.85,step=0.05))
            )),
     
     column(width=12,
@@ -52,13 +61,26 @@ input_page <- tabItem(
            column(width=2,checkboxInput("prior_hide", "Hide?", F))),
     conditionalPanel(
       condition = "input.prior_TF",
-      column(width=12,
-             column(width=6,uiOutput("from")),
-             column(width=6,uiOutput("to"))),
-      radioButtons("BorW",NULL,c("blacklist","whitelist"),inline = T),
-      column(width=4,actionButton("AddButtonP", "Add!",icon=icon("plus"),lib="glyphicon")),
-      column(width=4,actionButton("delButtonP", "Delete!",icon=icon("trash"),lib="glyphicon")),
-      column(width=4,actionButton("GoButtonP", "Go!",icon=icon("play"),lib="glyphicon"))
+      column(width=12,radioButtons("Prior_Type","Input type:",c("Single","Batch"),inline = T)),
+      conditionalPanel(
+        condition="input.Prior_Type == 'Single'",
+        column(width=12,
+               column(width=6,uiOutput("from")),
+               column(width=6,uiOutput("to"))),
+        column(width=12,radioButtons("BorW",NULL,c("blacklist","whitelist"),inline = T)),
+        column(width=3,actionButton("AddButtonP", "Add!",icon=icon("plus"),lib="glyphicon")),
+        column(width=3,actionButton("delButtonP", "Delete!",icon=icon("trash"),lib="glyphicon")),
+        column(width=3,actionButton("ClearButtonP", "Clear!",icon=icon("refresh"),lib="glyphicon")),
+        column(width=3,actionButton("GoButtonP", "Go!",icon=icon("play"),lib="glyphicon"))
+      ),
+      conditionalPanel(
+        condition="input.Prior_Type == 'Batch'",
+        column(width=12,
+               column(width=4,fileInput("Pri_Batch","Upload prior(.csv)")),
+               column(width=4,checkboxInput("PriHeader","Header?",TRUE)),
+               column(width=4,radioButtons("PriSep","Separator:",c("Comma"=",","Tabs"="\t","Spaces"=" "),inline = T)),
+               column(width=12,helpText("Please input a csv file with 3 column: From, To, Type!")))
+      )
     ),
     conditionalPanel(
       condition = "input.inType == 'Raw Data(.csv)' & input.prior_TF &  ! input.prior_hide",
@@ -66,13 +88,14 @@ input_page <- tabItem(
     ),
     br(),
     h4(strong("Parameter learning:")),
-    column(width=12,selectInput("inMethod","Parameter Algorithm:",c("Maximum Likelihood parameter estimation"="mle",
-                                                    "Bayesian parameter estimation"="bayes")))
+    column(width=12,
+           column(width=12,selectInput("inMethod","Parameter Algorithm:",c("Maximum Likelihood parameter estimation"="mle",
+                                                    "Bayesian parameter estimation"="bayes"))))
   ),
   conditionalPanel(
     condition = "input.inType == 'R Object(.Rdata)'",
     br(),
-    column(width=12,fileInput("inObject","Choose your R Object(.Rdata):"))
+    column(width=12,fileInput("inObject","Choose your R Object(.Rdata) and Data(if needed):"))
   ),
   conditionalPanel(
     condition = "input.inType == 'Structure in Excel'",

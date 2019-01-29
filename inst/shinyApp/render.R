@@ -11,5 +11,8 @@ render_page <- tabItem(
              column(width=1,actionLink("shinyBN_choose",shiny::img(src="Network_download.png",height=30,width=30)))
   ),
   fixedPanel(top = 95,right=0,width=160,draggable = F,
-             uiOutput("Choose_download"))
+             uiOutput("Choose_download")),
+  column(width=12,
+         actionButton("ClearLogRender","Clear log!",icon=icon("trash"),lib="glyphicon"),
+         verbatimTextOutput("Render_ERROR"))
 )
