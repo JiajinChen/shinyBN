@@ -5,7 +5,7 @@ Version: 1.0.0
 Author: Jiajin Chen,Yongyue Wei
 Maintainer: Yongyue Wei<ywei@njmu.edu.cn>
 Description: A Shiny web application for interactive construction,visualization and inference of Bayesian Network.
-Depends: shiny,shinydashboard,shinydashboardPlus,DT,bnlearn,gRain,visNetwork,reshape2,AnnotationDbi,shinyjqui,igraph,sqldf,knitr,rPlotter,ggsci,ggplot2
+Depends: shiny,shinydashboard,shinydashboardPlus,DT,bnlearn,gRain,visNetwork,reshape2,AnnotationDbi,shinyjqui,igraph,sqldf,knitr,rPlotter,ggsci,ggplot2,writexl,readxl,pROC,rmda,knitr
 License: Apache License 2.0
 Encoding: UTF-8
 LazyData: true
