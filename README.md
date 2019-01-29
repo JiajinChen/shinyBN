@@ -40,7 +40,7 @@ Please visit: [https://jiajin.shinyapps.io/shinyBN/](https://jiajin.shinyapps.io
 # Main Page
 ___
 
-<img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Main%20Page.png?raw=true"/>
+<img src="https://github.com/JiajinChen/Dependence/blob/master/images/Main%20Page.png?raw=true"/>
 
 
 # How to use
@@ -54,7 +54,7 @@ Here, we provide Four type of data input:
 + **Raw Data(.csv) :** Upload raw data and perform structure learning, parameter training in *shinyBN*.
 + **Structure in Excel :** Upload a Excel with Network information (see [Example](https://github.com/JiajinChen/shinyBN/blob/master/inst/shinyApp/data/shinyBN.xlsx)).
 
-  <img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Input.png?raw=true"/>
+  <img src="https://github.com/JiajinChen/Dependence/blob/master/images/Input.png?raw=true"/>
    
 ### **Step 2: Render your Network!**
 
@@ -64,7 +64,7 @@ Once your BN is inputed, the plot would present automatically with default param
 + **Step2 :** Use any text editor to open the HTML formatted file and replace the text '888px' to the pixel you want, such as '5000px'. Save the change.
 + **Step3 :** Open the HTML file with your browser and adjust the network to the maximum. Then right click to view the image. Finally, right click to save the image.
 
-  <img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Render.png?raw=true"/>
+  <img src="https://github.com/JiajinChen/Dependence/blob/master/images/Render.png?raw=true"/>
   
   + An Example:
   
@@ -75,7 +75,7 @@ Once your BN is inputed, the plot would present automatically with default param
 One of the major functions of Bayesian network is outcome prediction. You can query the probability of interested nodes given the values of a set of instantiated nodes. *shinyBN* allowed users to set multiple instantiated nodes and both marginal probability and joint probability are supported, the prediction results will be displayed in bar plot or probabilistic table. Users can set different color representing different threshold to distinguish different levels of outcome probability. In addition, you can download the result through a PDF output interface for High-quality images.
 
 
-  <img src="https://github.com/JiajinChen/shinyBN/blob/master/inst/images/Inference.png?raw=true"/>
+  <img src="https://github.com/JiajinChen/Dependence/blob/master/images/Inference.png?raw=true"/>
   
   + An Example of single prediction:
   
