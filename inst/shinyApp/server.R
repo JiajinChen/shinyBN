@@ -1,4 +1,3 @@
-options(warn=-1)
 # change the maximum size restriction
 options(shiny.maxRequestSize=100*1024^2)
 # options(device.ask.default = FALSE)
@@ -9,8 +8,8 @@ shinyServer(function(input,output,session){
   # Structure Prior
   RecP <- reactive({
     if(input$Prior_Type == "Single"){
-      file <- input$inFile
-      if(!is.null(file)){
+      file_in <- input$inFile
+      if(!is.null(file_in)){
         data <- read.table(file_in$datapath, header = input$inHeader, sep= input$inSep,colClasses = "factor",na.strings = c("NA",""))
         nodelist = colnames(data)
       }
@@ -232,7 +231,7 @@ shinyServer(function(input,output,session){
     Continue <- NULL
     if(! is.null(in_file)){
       n_char <- nchar(in_file$name)
-      if(substr(in_file$name,n_char-2,n_char) == "xls" | substr(in_file$name,n_char-3,n_char) == "xlsx"){
+      if(tolower(substr(in_file$name,n_char-2,n_char)) == "xls" | tolower(substr(in_file$name,n_char-3,n_char)) == "xlsx"){
         Node <- read_excel(in_file$datapath,sheet = "Nodes")
         Edge <- read_excel(in_file$datapath,sheet = "Edges")
         if(! is.null(Node) & ! is.null(Edge)){
@@ -627,7 +626,12 @@ shinyServer(function(input,output,session){
       }
       else if(input$N_Intype == "Group in Excel"){
         Con <- RecContinue()[["Node"]]
-        inNodes = Con[Con$group == input$In_Ngroup,"id"]
+        if(input$In_Ngroup != "NA"){
+          inNodes = Con$id[Con$group == input$In_Ngroup]
+          inNodes <- inNodes[! is.na(inNodes)]
+        }else{
+          inNodes = Con$id[is.na(Con$group)]
+        }
       }
       else{
         if(input$inNodes != "Markov blanket of:") inNodes = input$inNodes
@@ -652,7 +656,7 @@ shinyServer(function(input,output,session){
     if(input$AddButtonNodes == n_ANode + 1) {
       n_ANode <<- n_ANode + 1
       
-      if(! is.null(inNodes)){
+      if(length(inNodes)){
         if(input$Nodes_type == 'Node Color'){
           if(input$N_color != "Other")
             Ncolorsize_tab <<- rbind(Ncolorsize_tab,data.frame(Nodes = inNodes,ColorSize = input$N_color,
@@ -674,9 +678,10 @@ shinyServer(function(input,output,session){
     
     if(input$DelButtonNodes == n_DNode + 1){
       n_DNode <<- n_DNode + 1
-      
-      indexNode = which(Ncolorsize_tab$Nodes %in% inNodes & Ncolorsize_tab$Type == input$Nodes_type)
-      if(length(indexNode)) Ncolorsize_tab <<- Ncolorsize_tab[-indexNode,]
+      if(length(inNodes)){
+        indexNode = which(Ncolorsize_tab$Nodes %in% inNodes & Ncolorsize_tab$Type == input$Nodes_type)
+        if(length(indexNode)) Ncolorsize_tab <<- Ncolorsize_tab[-indexNode,]
+      }
     }
     
     if(input$ClearNodes == n_ClearN + 1){
@@ -692,7 +697,6 @@ shinyServer(function(input,output,session){
                                                                                     columnDefs=list(list(className = 'dt-center', targets = 1:2))))
   
   recEdge <- reactive({
-    
     if(input$AddButtonEdges == n_AEdge + 1 | input$DelButtonEdges == n_DEdge + 1){
 
       if(input$inType != 'Structure in Excel'){
@@ -704,32 +708,42 @@ shinyServer(function(input,output,session){
       }else if(input$E_Intype == "Group in Excel"){
         e <- RecContinue()[["Edge"]]
         edges = paste(e$from,"~",e$to,sep = '')
-        inEdges = edges[e$group == input$In_Egroup]
+        if(input$In_Egroup != "NA"){
+          inEdges <<- edges[e$group == input$In_Egroup]
+          inEdges <<- inEdges[! is.na(inEdges)]
+        }else{
+          inEdges <<- edges[is.na(e$group)]
+        }
       }
     }
     
+    
     if(input$AddButtonEdges == n_AEdge + 1){
       n_AEdge <<- n_AEdge + 1
-      if(input$Edges_type == 'Edge Color'){
-        if(input$E_color != "Other")
-          Ecolorsize_tab <<- rbind(Ecolorsize_tab,data.frame(Edges = inEdges,ColorSize = input$E_color,
+      if(length(inEdges)){
+        if(input$Edges_type == 'Edge Color'){
+          if(input$E_color != "Other")
+            Ecolorsize_tab <<- rbind(Ecolorsize_tab,data.frame(Edges = inEdges,ColorSize = input$E_color,
+                                                               Type = input$Edges_type,stringsAsFactors=FALSE))
+          else
+            Ecolorsize_tab <<- rbind(Ecolorsize_tab,data.frame(Edges = inEdges,ColorSize = input$E_Other_color,
+                                                               Type = input$Edges_type,stringsAsFactors=FALSE))
+        }
+        else if(input$Edges_type == 'Edge Width'){
+          Ecolorsize_tab <<- rbind(Ecolorsize_tab,data.frame(Edges = inEdges,ColorSize = as.character(input$E_size),
                                                              Type = input$Edges_type,stringsAsFactors=FALSE))
-        else
-          Ecolorsize_tab <<- rbind(Ecolorsize_tab,data.frame(Edges = inEdges,ColorSize = input$E_Other_color,
-                                                             Type = input$Edges_type,stringsAsFactors=FALSE))
+        }
+        else Ecolorsize_tab <<- rbind(Ecolorsize_tab,data.frame(Edges = inEdges,ColorSize = input$E_type,
+                                                                Type = input$Edges_type,stringsAsFactors=FALSE))
       }
-      else if(input$Edges_type == 'Edge Width'){
-        Ecolorsize_tab <<- rbind(Ecolorsize_tab,data.frame(Edges = inEdges,ColorSize = as.character(input$E_size),
-                                                           Type = input$Edges_type,stringsAsFactors=FALSE))
-      }
-      else Ecolorsize_tab <<- rbind(Ecolorsize_tab,data.frame(Edges = inEdges,ColorSize = input$E_type,
-                                                              Type = input$Edges_type,stringsAsFactors=FALSE))
     }
     
     if(input$DelButtonEdges == n_DEdge + 1){
       n_DEdge <<- n_DEdge + 1
-      indexEdge = which(Ecolorsize_tab$Edges == inEdges & Ecolorsize_tab$Type == input$Edges_type)
-      if(length(indexEdge)) Ecolorsize_tab <<- Ecolorsize_tab[-indexEdge,]
+      if(length(inEdges)){
+        indexEdge = which(Ecolorsize_tab$Edges == inEdges & Ecolorsize_tab$Type == input$Edges_type)
+        if(length(indexEdge)) Ecolorsize_tab <<- Ecolorsize_tab[-indexEdge,]
+      }
     }
     
     if(input$ClearEdges == n_ClearE + 1){
@@ -1423,7 +1437,7 @@ shinyServer(function(input,output,session){
           index <- sample(1:nrow(data),replace = FALSE,size=proportion*nrow(data))
           valid_data <<- data[-index,]
         }
-        else if(input$inType != "Raw Data(.csv)" | input$Valid_Sample == 'Upload dataset'){
+        else{
           file_valid <- input$ValidSet
           if(! is.null(file_valid)){
             n_char <- nchar(file_valid$name)
@@ -1691,15 +1705,7 @@ shinyServer(function(input,output,session){
     }, contentType = 'application/pdf'
   )
   
-  
   # Index
-  output$Index_table <- reactive({
-    
-  })
-  
-  output$Index_table <- renderDataTable(RecQ(),class="compact",options=list(searching=T,
-                                                                            columnDefs=list(list(className = 'dt-center'))))
-  
   output$index <- renderPrint({
     
     valid_out <- rec_Pred_Impu()
@@ -1745,9 +1751,6 @@ shinyServer(function(input,output,session){
                      'Index2'=Index2)
       }
     }
-    
     text
   })
-  
-  
 })

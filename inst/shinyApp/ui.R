@@ -1,4 +1,3 @@
-options(warn=-1)
 
 shinyUI(
   dashboardPagePlus(
@@ -304,10 +303,10 @@ shinyUI(
           condition = "input.Infer_type == 'Validation Set'",
           conditionalPanel(
             condition = "input.inType == 'Raw Data(.csv)' & input.YNsplit == 'yes'",
-            radioButtons("Valid_Sample","Using:",c("Split Sample","Upload dataset"),inline=T)
+            radioButtons("Valid_Sample","Using:",c("Upload dataset","Split Sample"),inline=T)
           ),
           conditionalPanel(
-            condition = "input.inType != 'Raw Data(.csv)' | input.Valid_Sample == 'Upload dataset'",
+            condition = "input.inType != 'Raw Data(.csv)' | (input.inType == 'Raw Data(.csv)' & input.YNsplit == 'yes' & input.Valid_Sample == 'Upload dataset') | (input.inType == 'Raw Data(.csv)' & input.YNsplit == 'no')",
             fileInput("ValidSet","Upload validation Set:(csv)"),
             column(width=3,checkboxInput("ValidHeader","Header?",TRUE)),
             column(width=9,radioButtons("ValidSep","Separator:",c("Comma"=",","Tabs"="\t","Spaces"=" "),inline = T)),
