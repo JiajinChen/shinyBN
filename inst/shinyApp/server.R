@@ -8,8 +8,8 @@ shinyServer(function(input,output,session){
   # Structure Prior
   RecP <- reactive({
     if(input$Prior_Type == "Single"){
-      file_in <- input$inFile
-      if(!is.null(file_in)){
+      file <- input$inFile
+      if(!is.null(file)){
         data <- read.table(file_in$datapath, header = input$inHeader, sep= input$inSep,colClasses = "factor",na.strings = c("NA",""))
         nodelist = colnames(data)
       }
@@ -83,7 +83,7 @@ shinyServer(function(input,output,session){
       obj <- input$inObject
       if(! is.null(obj)){
         n_char <- nchar(obj$name)
-        if(substr(obj$name,n_char-4,n_char) == "rdata"){
+        if(substr(obj$name,n_char-4,n_char) == "rdata" | substr(obj$name,n_char-2,n_char) == "rda"){
           a <- load(obj$datapath)
           load(obj$datapath)
           if("bn.fit" %in% class(get(a[1])) | "bn" %in% class(get(a[1])))  bn_fit <- get(a[1])
@@ -93,7 +93,7 @@ shinyServer(function(input,output,session){
         else vals$Input_ERROR <- 2
       }
     }
-    else if(input$inType=='Raw Data(.csv)'){
+    else if(input$inType=='Individual level Data(.csv)'){
       file_in <- input$inFile
       if(! is.null(file_in)){
         n_char <- nchar(file_in$name)
@@ -128,30 +128,43 @@ shinyServer(function(input,output,session){
             }
             
             if(input$inLearnType == 'Constraint-Based Algorithms'){
-              if(input$inLearn1 == 'Grow-Shrink') dag <- gs(data,blacklist = black,whitelist = white)
-              else if(input$inLearn1 == 'Incremental Association') dag <- iamb(data,blacklist = black,whitelist = white)
-              else if(input$inLearn1 == 'Fast Incremental Association') dag <- fast.iamb(data,blacklist = black,whitelist = white)
-              else if(input$inLearn1 == 'Interleaved Incremental Association') dag <- inter.iamb(data,blacklist = black,whitelist = white)
-              # else if(input$inLearn1 == 'Max-Min Parents and Children') dag <- mmpc(data,blacklist = black,whitelist = white)
-              # else if(input$inLearn1 == 'Semi-Interleaved HITON-PC') dag <- si.hiton.pc(data,blacklist = black,whitelist = white)
+              if(input$inLearn1 == 'Grow-Shrink') dag <- gs(data,blacklist = black,whitelist = white,test=input$inTest1,alpha=input$inAlpha1)
+              else if(input$inLearn1 == 'Incremental Association') dag <- iamb(data,blacklist = black,whitelist = white,test=input$inTest1,alpha=input$inAlpha1)
+              else if(input$inLearn1 == 'Fast Incremental Association') dag <- fast.iamb(data,blacklist = black,whitelist = white,test=input$inTest1,alpha=input$inAlpha1)
+              else if(input$inLearn1 == 'Interleaved Incremental Association') dag <- inter.iamb(data,blacklist = black,whitelist = white,test=input$inTest1,alpha=input$inAlpha1)
+              else if(input$inLearn1 == 'Max-Min Parents and Children') dag <- mmpc(data,blacklist = black,whitelist = white,test=input$inTest1,alpha=input$inAlpha1)
+              else if(input$inLearn1 == 'Semi-Interleaved HITON-PC') dag <- si.hiton.pc(data,blacklist = black,whitelist = white,test=input$inTest1,alpha=input$inAlpha1)
             }
             else if(input$inLearnType == 'Score-Based Algorithms'){
-              if(input$inLearn2 == 'hill-climbing') dag <- hc(data,score=input$inScore2,blacklist = black,whitelist = white)
-              else if(input$inLearn2 == 'tabu search') dag <- tabu(data,score=input$inScore2,blacklist = black,whitelist = white)
+              if(input$inLearn2 == 'hill-climbing') dag <- hc(data,score=input$inScore2,blacklist = black,whitelist = white,restart=input$inRestart2,perturb=input$inPerturb2)
+              else if(input$inLearn2 == 'tabu search') dag <- tabu(data,score=input$inScore2,blacklist = black,whitelist = white,tabu = input$intabu2)
             }
             else if(input$inLearnType == 'Hybrid Algorithms'){
-              if(input$inLearn3 == 'Max-Min Hill Climbing') dag <- mmhc(data,blacklist = black,whitelist = white)
-              else if(input$inLearn3 == '2-phase Restricted Maximization') dag <- rsmax2(data,blacklist = black,whitelist = white)
+              if(input$inLearn32 == "hc"){
+                if(input$inLearn3 == 'Max-Min Hill Climbing') dag <- mmhc(data,blacklist = black,whitelist = white,restrict=input$inLearn31,maximize="hc",
+                                                                          restrict.args = list(test=input$inTest31,alpha=input$inAlpha31), maximize.args = list(restart=input$inRestart32,perturb=input$inPerturb32))
+                else if(input$inLearn3 == '2-phase Restricted Maximization') dag <- rsmax2(data,blacklist = black,whitelist = white,restrict=input$inLearn31,maximize="hc",
+                                                                                           restrict.args = list(test=input$inTest31,alpha=input$inAlpha31), maximize.args = list(restart=input$inRestart32,perturb=input$inPerturb32))
+              }else{
+                if(input$inLearn3 == 'Max-Min Hill Climbing') dag <- mmhc(data,blacklist = black,whitelist = white,restrict=input$inLearn31,maximize="tabu",
+                                                                          restrict.args = list(test=input$inTest31,alpha=input$inAlpha31), maximize.args = list(tabu = input$intabu32))
+                else if(input$inLearn3 == '2-phase Restricted Maximization') dag <- rsmax2(data,blacklist = black,whitelist = white,restrict=input$inLearn31,maximize="tabu",
+                                                                                           restrict.args = list(test=input$inTest31,alpha=input$inAlpha31), maximize.args = list(tabu = input$intabu32))
+              }
             }
             else if(input$inLearnType == 'Bootstrap'){
-              if(input$inLearn4 %in% c('gs','iamb','fast.iamb','inter.iamb','mmhc','rsmax2')){
+              if(input$inLearn4 %in% c('gs','iamb','fast.iamb','inter.iamb','mmhc','rsmax2',"mmpc","si.hiton.pc")){
                 boot = boot.strength(data=data,R = as.numeric(input$N_Boot),algorithm = input$inLearn4,
-                                     algorithm.args = list(blacklist = black,whitelist = white))
+                                     algorithm.args = list(blacklist = black,whitelist = white,test=input$inTest41,alpha=input$inAlpha41))
               }else{
-                boot = boot.strength(data=data,R = as.numeric(input$N_Boot),algorithm = input$inLearn4,
-                                     algorithm.args = list(score=input$inScore4,blacklist = black,whitelist = white))
+                if(input$inLearn4 == "hc"){
+                  boot = boot.strength(data=data,R = as.numeric(input$N_Boot),algorithm = "hc",
+                                       algorithm.args = list(score=input$inScore4,blacklist = black,whitelist = white,restart=input$inRestart42,perturb=input$inPerturb42))
+                }else{
+                  boot = boot.strength(data=data,R = as.numeric(input$N_Boot),algorithm = "tabu",
+                                       algorithm.args = list(score=input$inScore4,blacklist = black,whitelist = white,tabu=input$intabu42))
+                }
               }
-              boot[(boot$strength > input$Strength_Boot) & (boot$direction >=0.5),]
               dag = averaged.network(boot,threshold = input$Strength_Boot)
             }
             if(input$inLearnType == 'Bootstrap') time <- 120
@@ -198,7 +211,7 @@ shinyServer(function(input,output,session){
         else bn_data <- get(a[1])
       }
     }
-    else if(input$inType=='Raw Data(.csv)'){
+    else if(input$inType=='Individual level Data(.csv)'){
       file <- input$inFile
       if(! is.null(file)){
         bn_data <- read.table(file$datapath, header = input$inHeader, sep= input$inSep,colClasses = "factor",na.strings = c("NA",""))
@@ -231,7 +244,7 @@ shinyServer(function(input,output,session){
     Continue <- NULL
     if(! is.null(in_file)){
       n_char <- nchar(in_file$name)
-      if(tolower(substr(in_file$name,n_char-2,n_char)) == "xls" | tolower(substr(in_file$name,n_char-3,n_char)) == "xlsx"){
+      if(substr(in_file$name,n_char-2,n_char) == "xls" | substr(in_file$name,n_char-3,n_char) == "xlsx"){
         Node <- read_excel(in_file$datapath,sheet = "Nodes")
         Edge <- read_excel(in_file$datapath,sheet = "Edges")
         if(! is.null(Node) & ! is.null(Edge)){
@@ -270,7 +283,7 @@ shinyServer(function(input,output,session){
       vals$Input_ERROR <- 0
     }
     if(vals$Input_ERROR == 2) {
-      out_text <<- paste0(out_text,"\tError: Please input a 'rdata' format file.\n")
+      out_text <<- paste0(out_text,"\tError: Please input a 'rdata' or 'rda' format file.\n")
       vals$Input_ERROR <- 0
     }
     if(vals$Input_ERROR == 3) {
@@ -614,6 +627,7 @@ shinyServer(function(input,output,session){
     if(input$shinyBN_choose > n_NetDownload)
       box(width=12,
           downloadLink("shinyBN_Network.html","Figure in HTML"),
+          downloadLink("shinyBN_HD.html","High Pixel Figure"),
           downloadLink("shinyBN.xlsx","Structure in Excel"))
   })
   
@@ -626,12 +640,7 @@ shinyServer(function(input,output,session){
       }
       else if(input$N_Intype == "Group in Excel"){
         Con <- RecContinue()[["Node"]]
-        if(input$In_Ngroup != "NA"){
-          inNodes = Con$id[Con$group == input$In_Ngroup]
-          inNodes <- inNodes[! is.na(inNodes)]
-        }else{
-          inNodes = Con$id[is.na(Con$group)]
-        }
+        inNodes = Con[Con$group == input$In_Ngroup,"id"]
       }
       else{
         if(input$inNodes != "Markov blanket of:") inNodes = input$inNodes
@@ -656,7 +665,7 @@ shinyServer(function(input,output,session){
     if(input$AddButtonNodes == n_ANode + 1) {
       n_ANode <<- n_ANode + 1
       
-      if(length(inNodes)){
+      if(! is.null(inNodes)){
         if(input$Nodes_type == 'Node Color'){
           if(input$N_color != "Other")
             Ncolorsize_tab <<- rbind(Ncolorsize_tab,data.frame(Nodes = inNodes,ColorSize = input$N_color,
@@ -678,10 +687,9 @@ shinyServer(function(input,output,session){
     
     if(input$DelButtonNodes == n_DNode + 1){
       n_DNode <<- n_DNode + 1
-      if(length(inNodes)){
-        indexNode = which(Ncolorsize_tab$Nodes %in% inNodes & Ncolorsize_tab$Type == input$Nodes_type)
-        if(length(indexNode)) Ncolorsize_tab <<- Ncolorsize_tab[-indexNode,]
-      }
+      
+      indexNode = which(Ncolorsize_tab$Nodes %in% inNodes & Ncolorsize_tab$Type == input$Nodes_type)
+      if(length(indexNode)) Ncolorsize_tab <<- Ncolorsize_tab[-indexNode,]
     }
     
     if(input$ClearNodes == n_ClearN + 1){
@@ -697,6 +705,7 @@ shinyServer(function(input,output,session){
                                                                                     columnDefs=list(list(className = 'dt-center', targets = 1:2))))
   
   recEdge <- reactive({
+    
     if(input$AddButtonEdges == n_AEdge + 1 | input$DelButtonEdges == n_DEdge + 1){
 
       if(input$inType != 'Structure in Excel'){
@@ -708,42 +717,32 @@ shinyServer(function(input,output,session){
       }else if(input$E_Intype == "Group in Excel"){
         e <- RecContinue()[["Edge"]]
         edges = paste(e$from,"~",e$to,sep = '')
-        if(input$In_Egroup != "NA"){
-          inEdges <<- edges[e$group == input$In_Egroup]
-          inEdges <<- inEdges[! is.na(inEdges)]
-        }else{
-          inEdges <<- edges[is.na(e$group)]
-        }
+        inEdges = edges[e$group == input$In_Egroup]
       }
     }
     
-    
     if(input$AddButtonEdges == n_AEdge + 1){
       n_AEdge <<- n_AEdge + 1
-      if(length(inEdges)){
-        if(input$Edges_type == 'Edge Color'){
-          if(input$E_color != "Other")
-            Ecolorsize_tab <<- rbind(Ecolorsize_tab,data.frame(Edges = inEdges,ColorSize = input$E_color,
-                                                               Type = input$Edges_type,stringsAsFactors=FALSE))
-          else
-            Ecolorsize_tab <<- rbind(Ecolorsize_tab,data.frame(Edges = inEdges,ColorSize = input$E_Other_color,
-                                                               Type = input$Edges_type,stringsAsFactors=FALSE))
-        }
-        else if(input$Edges_type == 'Edge Width'){
-          Ecolorsize_tab <<- rbind(Ecolorsize_tab,data.frame(Edges = inEdges,ColorSize = as.character(input$E_size),
+      if(input$Edges_type == 'Edge Color'){
+        if(input$E_color != "Other")
+          Ecolorsize_tab <<- rbind(Ecolorsize_tab,data.frame(Edges = inEdges,ColorSize = input$E_color,
                                                              Type = input$Edges_type,stringsAsFactors=FALSE))
-        }
-        else Ecolorsize_tab <<- rbind(Ecolorsize_tab,data.frame(Edges = inEdges,ColorSize = input$E_type,
-                                                                Type = input$Edges_type,stringsAsFactors=FALSE))
+        else
+          Ecolorsize_tab <<- rbind(Ecolorsize_tab,data.frame(Edges = inEdges,ColorSize = input$E_Other_color,
+                                                             Type = input$Edges_type,stringsAsFactors=FALSE))
       }
+      else if(input$Edges_type == 'Edge Width'){
+        Ecolorsize_tab <<- rbind(Ecolorsize_tab,data.frame(Edges = inEdges,ColorSize = as.character(input$E_size),
+                                                           Type = input$Edges_type,stringsAsFactors=FALSE))
+      }
+      else Ecolorsize_tab <<- rbind(Ecolorsize_tab,data.frame(Edges = inEdges,ColorSize = input$E_type,
+                                                              Type = input$Edges_type,stringsAsFactors=FALSE))
     }
     
     if(input$DelButtonEdges == n_DEdge + 1){
       n_DEdge <<- n_DEdge + 1
-      if(length(inEdges)){
-        indexEdge = which(Ecolorsize_tab$Edges == inEdges & Ecolorsize_tab$Type == input$Edges_type)
-        if(length(indexEdge)) Ecolorsize_tab <<- Ecolorsize_tab[-indexEdge,]
-      }
+      indexEdge = which(Ecolorsize_tab$Edges == inEdges & Ecolorsize_tab$Type == input$Edges_type)
+      if(length(indexEdge)) Ecolorsize_tab <<- Ecolorsize_tab[-indexEdge,]
     }
     
     if(input$ClearEdges == n_ClearE + 1){
@@ -1180,6 +1179,35 @@ shinyServer(function(input,output,session){
     }, contentType = 'text/html'
   )
   
+  output$shinyBN_HD.html <- downloadHandler(
+    filename = "shinyBN_HD.html",
+    content = function(file){
+      node_Legend <- RecNL()
+      if(nrow(node_Legend)) node_Legend <- data.frame(node_Legend,font.size=input$NLegend_KeySize)
+      edge_Legend <- RecEL()
+      edge_Legend$dashes <- edge_Legend$linetype == "dashed"
+      edge_Legend <- edge_Legend[,c(1,3,4)]
+      if(nrow(edge_Legend)) edge_Legend <- data.frame(edge_Legend,font.size=input$NLegend_KeySize,font.align="bottom")
+      
+      if(! input$E_TF){
+        edge_Legend <- NULL
+      }
+      if(! input$N_TF){
+        node_Legend <-NULL
+        position <- input$ELegend_posion
+      }else position <- input$NLegend_posion
+      
+      visNetwork(nodes = recStruct()[["node"]], edges = recStruct()[["edge"]], height = "4000px", width = "4000px") %>%
+        visPhysics(enabled = FALSE)%>%
+        visEdges(smooth = F)%>%
+        visLegend(addEdges = edge_Legend,addNodes = node_Legend,width=0.1,
+                  position=position,useGroups=F,zoom=F)%>%
+        visOptions(autoResize=T)%>%
+        visSave(file)
+      
+    }, contentType = 'text/html'
+  )
+  
   # Network Download(Structure in Excel)
   output$shinyBN.xlsx <- downloadHandler(
     filename = "shinyBN.xlsx",
@@ -1243,7 +1271,7 @@ shinyServer(function(input,output,session){
     }
     if(nrow(RecE()) & nrow(Query_tab)){
       Evinode <- RecE()$Evidence
-      if(any(Evinode==Query_tab$Query)) {
+      if(any(Evinode %in% Query_tab$Query)) {
         var <- Evinode[which(Evinode %in% Query_tab$Query)]
         vals$Valid_ERROR <- 0.1
         Query_tab <<- Query_tab[! Query_tab$Query %in% var,]
@@ -1425,7 +1453,7 @@ shinyServer(function(input,output,session){
     if(input$Infer_type == 'Validation Set'){
       fit <- recFit()
       if(! is.null(fit) & "bn.fit" %in% class(fit)){
-        if(input$inType == "Raw Data(.csv)" & input$YNsplit == "yes" & input$Valid_Sample == "Split Sample"){
+        if(input$inType == "Individual level Data(.csv)" & input$YNsplit == "yes" & input$Valid_Sample == "Split Sample"){
           file_in <- input$inFile
           data <- read.table(file_in$datapath, header = input$inHeader, sep= input$inSep,colClasses = "factor",na.strings = c("NA",""))
           if(input$Split_Proportion == "7:3") proportion <- 0.7
@@ -1437,7 +1465,7 @@ shinyServer(function(input,output,session){
           index <- sample(1:nrow(data),replace = FALSE,size=proportion*nrow(data))
           valid_data <<- data[-index,]
         }
-        else{
+        else if(input$inType != "Individual level Data(.csv)" | input$Valid_Sample == 'Upload dataset'){
           file_valid <- input$ValidSet
           if(! is.null(file_valid)){
             n_char <- nchar(file_valid$name)
@@ -1705,7 +1733,15 @@ shinyServer(function(input,output,session){
     }, contentType = 'application/pdf'
   )
   
+  
   # Index
+  output$Index_table <- reactive({
+    
+  })
+  
+  output$Index_table <- renderDataTable(RecQ(),class="compact",options=list(searching=T,
+                                                                            columnDefs=list(list(className = 'dt-center'))))
+  
   output$index <- renderPrint({
     
     valid_out <- rec_Pred_Impu()
@@ -1751,6 +1787,9 @@ shinyServer(function(input,output,session){
                      'Index2'=Index2)
       }
     }
+    
     text
   })
+  
+  
 })

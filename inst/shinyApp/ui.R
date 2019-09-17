@@ -51,7 +51,7 @@ shinyUI(
         icon = "circle",
         active = T,
         conditionalPanel(
-          condition = "input.inType == 'Raw Data(.csv)' | input.inType == 'R Object(.Rdata)' | (input.inType == 'R Object in R' & input.inFit != 'Stroke_bnfit')",
+          condition = "input.inType == 'Individual level Data(.csv)' | input.inType == 'R Object(.Rdata)' | (input.inType == 'R Object in R' & input.inFit != 'Stroke_bnfit')",
           h4("Initial parameters for all nodes:"),
           column(width=12,
                  column(width=6,radioButtons("IN_color_type","Nodes Color:",c("Self-defined","SCI-Style","Pic-Style"))),
@@ -171,7 +171,7 @@ shinyUI(
         title = "Edges:",
         icon = "long-arrow-alt-right",
         conditionalPanel(
-          condition = "input.inType == 'Raw Data(.csv)' | input.inType == 'R Object(.Rdata)' | (input.inType == 'R Object in R' & input.inFit != 'Stroke_bnfit')",
+          condition = "input.inType == 'Individual level Data(.csv)' | input.inType == 'R Object(.Rdata)' | (input.inType == 'R Object in R' & input.inFit != 'Stroke_bnfit')",
           h4("Initial parameters for all edges:"),
           column(width=12,
                  column(width=6,selectInput("IE_color","Edges Color:",c("gray","red","orange","yellow","green","Other"))),
@@ -302,11 +302,11 @@ shinyUI(
         conditionalPanel(
           condition = "input.Infer_type == 'Validation Set'",
           conditionalPanel(
-            condition = "input.inType == 'Raw Data(.csv)' & input.YNsplit == 'yes'",
-            radioButtons("Valid_Sample","Using:",c("Upload dataset","Split Sample"),inline=T)
+            condition = "input.inType == 'Individual level Data(.csv)' & input.YNsplit == 'yes'",
+            radioButtons("Valid_Sample","Using:",c("Split Sample","Upload dataset"),inline=T)
           ),
           conditionalPanel(
-            condition = "input.inType != 'Raw Data(.csv)' | (input.inType == 'Raw Data(.csv)' & input.YNsplit == 'yes' & input.Valid_Sample == 'Upload dataset') | (input.inType == 'Raw Data(.csv)' & input.YNsplit == 'no')",
+            condition = "input.inType != 'Individual level Data(.csv)' | input.Valid_Sample == 'Upload dataset'",
             fileInput("ValidSet","Upload validation Set:(csv)"),
             column(width=3,checkboxInput("ValidHeader","Header?",TRUE)),
             column(width=9,radioButtons("ValidSep","Separator:",c("Comma"=",","Tabs"="\t","Spaces"=" "),inline = T)),
