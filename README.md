@@ -86,12 +86,9 @@ One of the major functions of Bayesian network is inference. You can query the p
   
   ![grab-landing-page](https://github.com/JiajinChen/Dependence/blob/master/GIF/Batch%20inference.gif?v=9ad8eed7)
 
-# Reference
-shinyBN: An online application for interactive Bayesian network inference and visualization
+# Publication
 
-# Source code
-
-*shinyBN* is an open source project, and the source code and its manual is freely available at https://github.com/JiajinChen/shinyBN.
+Chen, J., Zhang, R., Dong, X. et al. shinyBN: an online application for interactive Bayesian network inference and visualization. BMC Bioinformatics 20, 711 (2019) doi:10.1186/s12859-019-3309-0
 
 # Contact us
 
