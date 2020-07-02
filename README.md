@@ -15,8 +15,14 @@ library(devtools)
 install.packages(c("shiny","shinydashboard","shinydashboardPlus","sqldf","writexl","readxl","reshape2","DT","bnlearn","ggsci","shinyjqui","ggplot2","visNetwork","pROC","rmda","knitr"))
 
 # Packages on Bioconductor
+#  For R version 3.5 or greater, install Bioconductor packages using BiocManager; see https://bioconductor.org/install
+if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+BiocManager::install(c("gRain","igraph","AnnotationDbi","EBImage"))
+
+# Others
 source("http://bioconductor.org/biocLite.R")
 biocLite(c("gRain","igraph","AnnotationDbi","EBImage"))
+
 
 # Packages on Github
 install_github(c("ramnathv/rblocks","woobe/rPlotter"))
