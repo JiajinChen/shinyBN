@@ -93,7 +93,7 @@ One of the major functions of Bayesian network is inference. You can query the p
 
 # Publication
 
-[Chen, J., Zhang, R., Dong, X. et al. shinyBN: an online application for interactive Bayesian network inference and visualization. BMC Bioinformatics 20, 711 (2019) doi:10.1186/s12859-019-3309-0](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-019-3309-0)
+[Chen, J., Zhang, R., Dong, X. et al. shinyBN: an online application for interactive Bayesian network inference and visualization. *BMC Bioinformatics* 20, 711 (2019) doi:10.1186/s12859-019-3309-0](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-019-3309-0)
 
 # Contact us
 
