@@ -25,7 +25,12 @@ biocLite(c("gRain","igraph","AnnotationDbi","EBImage"))
 
 # Packages on Github
 install_github(c("ramnathv/rblocks","woobe/rPlotter"))
+
+
+# Notes: Some R packages are too old, you can install the `Old sources` from CRAN, of which released before 2019 are proper.
 ```
+
+
 
 Install *shinyBN* from Github:
 ```{r,eval = FALSE}
