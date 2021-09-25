@@ -45,7 +45,7 @@ shinyBN::run_shinyBN()
 
 ***Lauch the APP through browser:***
 
-Please visit: [https://jiajin.shinyapps.io/shinyBN/](https://jiajin.shinyapps.io/shinyBN/) or [http://120.26.126.140:3838/shinyBN/](http://120.26.126.140:3838/shinyBN/)
+Please visit: [https://jiajin.shinyapps.io/shinyBN/](https://jiajin.shinyapps.io/shinyBN/) or [http://bigdata.njmu.edu.cn/shinyBN/](http://bigdata.njmu.edu.cn/shinyBN/)
 
 # Main Page
 ___
