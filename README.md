@@ -96,8 +96,6 @@ One of the major functions of Bayesian network is inference. You can query the p
   
   ![grab-landing-page](https://github.com/JiajinChen/Dependence/blob/master/GIF/Batch%20inference.gif?v=9ad8eed7)
 
-# Publication
-
 
 
 # If you use shinyBN in your work, please cite:
